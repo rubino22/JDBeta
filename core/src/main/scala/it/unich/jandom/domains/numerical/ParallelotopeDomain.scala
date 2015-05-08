@@ -60,6 +60,7 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
     val low = DenseVector.fill(n)(Double.NegativeInfinity)
     val high = DenseVector.fill(n)(Double.PositiveInfinity)
     val A = DenseMatrix.eye[Double](n)
+  
     new Property(false, low, A, high)
     /* The full parallelotope of dimension 0 is not empty! */
   }
@@ -149,6 +150,8 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
     require(low.length == A.rows)
     require(low.length == A.cols)
     require(Try(A \ DenseMatrix.eye[Double](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")
+    //println(A)
+   // println("-------------");
     require(normalized)
 
     type Domain = ParallelotopeDomain

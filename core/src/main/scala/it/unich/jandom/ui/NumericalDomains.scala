@@ -36,7 +36,9 @@ object NumericalDomains extends ParameterEnumeration[NumericalDomain] {
       "w.r.t. reals."),
     ParameterValue(ParallelotopeDomain(), "Parallelotope", "This is a native Scala implementation of parallelotopes. It is " +
       "not safe and should not be used.")
-    ,ParameterValue(SumIntParallelotopeDomain(), "BoxDouble + Parallelotope", "Sum of boxes and parallelotopes.")  
+    ,ParameterValue(SumIntParallelotopeDomain(), "BoxDouble + Parallelotope", "Sum of boxes and parallelotopes.")
+    ,ParameterValue(ParallelotopeDomainModRationalGmpExt(), "ParallelotopeModQ", "Library GMP Wrapper ")
+    
   )
   val default = values.last
 

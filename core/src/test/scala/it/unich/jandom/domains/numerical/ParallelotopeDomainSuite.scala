@@ -59,6 +59,7 @@ class ParallelotopeDomainSuite extends NumericalDomainSuite with SeparatedTopAnd
   }
 
   describe("comparison of parallelotopes") {
+   
     assert(empty < box)
     assert(box < full)
     assert(empty < full)
@@ -112,6 +113,8 @@ class ParallelotopeDomainSuite extends NumericalDomainSuite with SeparatedTopAnd
     val nd1 = dom(DenseVector(Double.NegativeInfinity, -1), DenseMatrix.eye(2), DenseVector(Double.PositiveInfinity, 1))
     assertResult(nd1) { box.nonDeterministicAssignment(0) }
     assertResult(nd1) { nd1.nonDeterministicAssignment(0) }
+     println("-> "+diamond.nonDeterministicAssignment(0));
+    
     assertResult(nd1) { diamond.nonDeterministicAssignment(0) }
     val nd2 = dom(DenseVector(0, 0), DenseMatrix((2.0, 1.0), (2.0, -1.0)), DenseVector(1, 1))
     val nd3 = dom(DenseVector(Double.NegativeInfinity, -1), DenseMatrix((2.0, 1.0), (0.0, -2.0)), DenseVector(Double.PositiveInfinity, 1))
