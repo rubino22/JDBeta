@@ -498,12 +498,17 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def linearDisequality(lf: LinearForm[Double]): Property = {
+      
       val tcoeff = lf.homcoeffs
+      
       val known = lf.known
+      println(DenseVector(tcoeff: _*));
+     
       if (tcoeff.forall(_ == 0))
         if (known == 0) bottom else this
       else {
         val row = (0 until dimension).find(A(_, ::).t == DenseVector(tcoeff: _*))
+        
         row match {
           case None => this
           case Some(row) =>

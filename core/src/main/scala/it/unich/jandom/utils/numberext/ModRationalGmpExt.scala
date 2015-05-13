@@ -51,16 +51,9 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 			case (POSINF,POSINF) => ModRationalGmpExt.PositiveInfinity
 			case (NEGINF,NEGINF) => ModRationalGmpExt.NegativeInfinity
 			case (NEGINF,POSINF) => ModRationalGmpExt.NaN
-			case (POSINF,NEGINF) => ModRationalGmpExt.NaN
-			case (NAN,NAN) => ModRationalGmpExt.NaN
+			case (POSINF,NEGINF) => ModRationalGmpExt.NaN			
 			case (_,NAN) => ModRationalGmpExt.NaN
 			case (NAN,_) => ModRationalGmpExt.NaN
-			// case (NORMAL,_) =>{ println("$$$ "+special+" "+that.special);that}
-			//  case (_,NORMAL) => {println("???? "+special+" "+that.special);this}
-			//case (POSINF, _) =>  ModRationalGmpExt.PositiveInfinity
-			//case (NEGINF, _) => ModRationalGmpExt.NegativeInfinity 
-			//case (_,POSINF) =>  ModRationalGmpExt.PositiveInfinity
-			//case (_ , NEGINF) => ModRationalGmpExt.NegativeInfinity 
 
 
 	}  
@@ -84,13 +77,10 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	case (POSINF, NEGINF) => ModRationalGmpExt.NegativeInfinity
 	case (NEGINF, POSINF) => ModRationalGmpExt.NegativeInfinity
 	case (POSINF, POSINF) => ModRationalGmpExt.PositiveInfinity
-	case (NEGINF, NEGINF) => ModRationalGmpExt.PositiveInfinity    
-	case (NAN , NAN) => ModRationalGmpExt.NaN
+	case (NEGINF, NEGINF) => ModRationalGmpExt.PositiveInfinity
 	case (NAN, _) => ModRationalGmpExt.NaN
 	case (_ , NAN) => ModRationalGmpExt.NaN
-	/*case (NORMAL,_) => that
-    case (_,NORMAL) => this 
-    case _ => that*/
+	
 	}  
 	} 
 	def /(that: ModRationalGmpExt): ModRationalGmpExt ={ (special,that.special) match {      
@@ -119,8 +109,7 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	case (POSINF, NEGINF) => ModRationalGmpExt.NaN
 	case (NEGINF, POSINF) => ModRationalGmpExt.NaN
 	case (POSINF, POSINF) => ModRationalGmpExt.NaN
-	case (NEGINF, NEGINF) => ModRationalGmpExt.NaN
-	case (NAN , NAN) => ModRationalGmpExt.NaN
+	case (NEGINF, NEGINF) => ModRationalGmpExt.NaN	
 	case (NAN, _) => ModRationalGmpExt.NaN
 	case (_ , NAN) => ModRationalGmpExt.NaN    
 
@@ -139,8 +128,7 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 			case (NEGINF, POSINF) =>  ModRationalGmpExt.NegativeInfinity
 			case (POSINF,NEGINF) =>  ModRationalGmpExt.PositiveInfinity
 			case (POSINF,POSINF) =>  ModRationalGmpExt.NaN 
-			case (NEGINF,NEGINF) =>  ModRationalGmpExt.NaN   
-			case (NAN,NAN) => ModRationalGmpExt.NaN 
+			case (NEGINF,NEGINF) =>  ModRationalGmpExt.NaN
 			case (_,NAN) =>  ModRationalGmpExt.NaN 
 			case (NAN,_) =>  ModRationalGmpExt.NaN
 
@@ -148,7 +136,7 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 			//case (_,NORMAL) => {val r = new MPQ();r.set_neg(this.value); new ModRationalGmpExt(r,NORMAL);}
 	}  
 
-	def pow(that: ModRationalGmpExt): ModRationalGmpExt = {println("XXXXXXXXXXXXXXXXXXxx");(special,that.special) match {
+	def pow(that: ModRationalGmpExt): ModRationalGmpExt = {(special,that.special) match {
 	case (NORMAL,NORMAL) => {
 		var res = new MPQ();
 		res.set_d(1)
@@ -158,7 +146,9 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	case (_,NORMAL) => this
 	case (POSINF, NEGINF) => ModRationalGmpExt.NaN
 	case (NEGINF, POSINF) => ModRationalGmpExt.NaN
-	case _ => that
+  case (NAN, _) => ModRationalGmpExt.NaN
+  case (_,NAN) => ModRationalGmpExt.NaN
+	//case _ => that
 	}
 	}
 
@@ -183,11 +173,12 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 			case NORMAL => {val z= new MPQ();z.set_neg(value);new ModRationalGmpExt(z, NORMAL)}
 			case POSINF => ModRationalGmpExt.NegativeInfinity
 			case NEGINF => ModRationalGmpExt.PositiveInfinity
-			case NAN => this
+			//case NAN => this
+      case NAN => ModRationalGmpExt.NaN
 	}  
 
 	override def toString = special match {
-	case NORMAL => value.toString()
+	case NORMAL => value.get_str(10);
 	case POSINF => "+Inf"
 	case NEGINF => "-Inf"
 	case NAN => "NaN"  
@@ -223,7 +214,7 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 
 	def max(that: ModRationalGmpExt): ModRationalGmpExt =  (special,that.special) match {
 	case (NORMAL,NORMAL) => {value.cmp(that.value)  match {
-	case 1 => new ModRationalGmpExt(value,NORMAL)
+	case 1 =>  new ModRationalGmpExt(value,NORMAL)
 	case _ => new ModRationalGmpExt(that.value,NORMAL)
 	}  
 	}
@@ -311,14 +302,18 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 
 
 
-	override def <(that: ModRationalGmpExt): Boolean = 
-    that> this
+	override def <(that: ModRationalGmpExt): Boolean = (special,that.special) match {
+    case (NAN,_) => false
+    case (_,NAN) => false
+    case (_,_) =>that> this
+  }
 
 
-
-	override def <=(that: ModRationalGmpExt): Boolean = 	
-  (that >= this)
-
+	override def <=(that: ModRationalGmpExt): Boolean =(special,that.special) match { 	
+     case (NAN,_) => false
+     case (_,NAN) => false
+     case (_,_) =>(that >= this)
+  }
 
 
 	def !=(that: ModRationalGmpExt) : Boolean = (special,that.special) match {
@@ -337,15 +332,40 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 
 
 	} 
-	def ==(that: ModRationalGmpExt) : Boolean = !(this!=that)
-	
-	/* override def equals(other: Any): Boolean = {
+	/*override def ==(that: Any) : Boolean = that match {
+    case that: ModRationalGmpExt =>
+          {(special,that.special) match {
+            case (NAN,_) => false
+            case (_,NAN) => false  
+            case (_,_) => !(this!=that)
+            }
+          }
+  case _=> false
+  }*/
+  override def equals(that: Any) : Boolean = that match {
+    case that: ModRationalGmpExt =>
+          {(special,that.special) match {
+            case (NAN,_) => false
+            case (_,NAN) => false  
+            case (_,_) => !(this!=that)
+            }
+          }
+  case _=> false
+  }
+/*	 override def equals(other: Any): Boolean = {
     other match {
       case other: ModRationalGmpExt => this.value == other.value && this.special == other.special
       case _ => false
     }        
   }*/
-  def toDouble: Double = value.get_d
+   
+  def toDouble: Double = special match {
+  case NORMAL => value.get_d    
+  case NEGINF => scala.Double.NegativeInfinity
+  case POSINF => scala.Double.PositiveInfinity
+  case NAN  => scala.Double.NaN
+  
+  }
 
 }
 object ModRationalGmpExt { outer =>    
@@ -361,11 +381,12 @@ val NegativeInfinity = {val ze= new MPQ();ze.set_d(0); new ModRationalGmpExt(ze,
 val NaN = {val ze= new MPQ();ze.set_d(0);new ModRationalGmpExt(ze, NAN)}
 
 def apply(d: Double): ModRationalGmpExt = {
-
+     
 		d.toString() match {
 		case  "Infinity"  =>{ModRationalGmpExt.PositiveInfinity}
 		case "-Infinity" =>{ ModRationalGmpExt.NegativeInfinity}
-		case  _ =>{ val r= new MPQ();r.set_d(d);  new ModRationalGmpExt(r,NORMAL)}
+    case "NAN" =>{ ModRationalGmpExt.NaN}
+		case  _ =>{val r= new MPQ();r.set_d(d); new ModRationalGmpExt(r,NORMAL)}
 		}    
 
 }

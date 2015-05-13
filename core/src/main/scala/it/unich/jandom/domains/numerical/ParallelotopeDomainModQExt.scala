@@ -50,14 +50,13 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
     val low1= DenseVector.zeros[ModRationalGmpExt](low.length)
     val A1= DenseMatrix.zeros[ModRationalGmpExt](A.rows, A.cols)
     val high1= DenseVector.zeros[ModRationalGmpExt](high.length)
-    for(i <- 0 until low.length){ low1(i)=ModRationalGmpExt(low(i))}
-    
-    for(i <- 0 until high.length){ high1(i)=ModRationalGmpExt(high(i))}
-    
+    for(i <- 0 until low.length){ low1(i)=ModRationalGmpExt(low(i))}    
+    for(i <- 0 until high.length){ high1(i)=ModRationalGmpExt(high(i))}    
     for(i <- 0 until A.rows){ for(j <- 0 until A.cols){A1(i,j)=ModRationalGmpExt(A(i,j))}}
     
     val isEmpty = (0 until low1.size) exists { i => low1(i) > high1(i) }
     val isEmpty2 = (0 until low1.size) exists { i => low1(i).isInfinite && low1(i) == high1(i) }
+  
     new Property(isEmpty || isEmpty2, low1, A1, high1)
   }
 
@@ -162,9 +161,9 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
     
    require(low.length == A.cols)
    
-   //println(A)
-  // println("--------");
-   //println(DenseMatrix.eye[ModRationalGmpExt](dimension));
+   println("A "+A+"  "+"      LOW "+low+"     HIGH   "+high)
+   println("--------");
+   
     require(Try(A \ DenseMatrix.eye[ModRationalGmpExt](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")     
     require(normalized)
     //print("Low "+low+" --High ");
@@ -484,6 +483,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
           val lfArgmin = coeffsTransformed mapPairs { case (i, c) => if (c > ModRationalGmpExt.zero) low(i) else high(i) }
 
           val infinities = (0 until dimension) filter { i => lfArgmin(i).isInfinity && coeffsTransformed(i) != ModRationalGmpExt.zero }         
+         println(infinities);
           infinities.size match {
             case 0 => 
               for (i <- 0 until dimension) {
@@ -503,10 +503,14 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
         }
         case Some(chosen) => {
           // TODO: check.. I think this may generate non-invertible matrices
+         
           val newA = A.copy
+           println("A"+A);
           val newhigh = high.copy
           newA(chosen, ::) := coeffs.t
           newhigh(chosen) = -known
+           println("A"+A);
+           println("NewA"+newA);
           new Property(false, low, newA, newhigh)
         }
       }
@@ -518,18 +522,19 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
      * @note @inheritdoc
      * @throws $ILLEGAL
      */
-    def linearDisequality_m(lf: LinearForm[ModRationalGmpExt]): Property = {
-     //println("LF"+lf);
-      val tcoeff = lf.homcoeffs
-     // println("tcoeff"+tcoeff);
-      val known = lf.known
-     // println("known"+known);
-     // println("high"+high);
-     // println("low"+low);
+    def linearDisequality_m(lf: LinearForm[ModRationalGmpExt]): Property = {     
+      val tcoeff = lf.homcoeffs     
+      val known = lf.known   
+       
       if (tcoeff.forall(_ == ModRationalGmpExt.zero))
         if (known == ModRationalGmpExt.zero) bottom else this
-      else {
-        val row = (0 until dimension).find(A(_, ::).t == DenseVector(tcoeff: _*))
+      else {       
+       
+        val row = (0 until dimension).find { (r) =>
+          val v1 = A(r, ::).t
+          val v2 = DenseVector[ModRationalGmpExt](tcoeff: _*)
+          v1 == v2
+        }
         row match {
           case None => this
           case Some(row) =>
@@ -657,7 +662,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
 
       val tcoeff = lf.homcoeffs
       if (isEmpty && tcoeff.exists { _ != ModRationalGmpExt.zero })
-        (ModRationalGmpExt.NegativeInfinity,ModRationalGmpExt.PositiveInfinity)
+        (ModRationalGmpExt.PositiveInfinity,ModRationalGmpExt.NegativeInfinity)
       else if (dimension == 0)
         (lf.known, lf.known)
       else {

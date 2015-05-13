@@ -163,8 +163,7 @@ trait NumericalDomainSuite extends CartesianFiberedDomainSuite {
       forAll(someFibers) { (f) =>
         forAll(someLinearForms) { (lf) =>
           if (f.size >= lf.dimension && lf.homcoeffs.exists { _ != 0 }) {
-            println("->"+dom.top(f));
-            println("->"+dom.top(f).minimize(lf));
+            
             assert(dom.top(f).minimize(lf).isNegInfinity)
             assert(dom.top(f).maximize(lf).isPosInfinity)
             assert(dom.top(f).frequency(lf).isEmpty)
@@ -178,6 +177,7 @@ trait NumericalDomainSuite extends CartesianFiberedDomainSuite {
           if (f.size >= lf.dimension && lf.homcoeffs.exists { _ != 0 }) {
             val bot = dom.bottom(f)
             if (bot.isEmpty) {
+              
               assert(dom.bottom(f).minimize(lf).isPosInfinity)
               assert(dom.bottom(f).maximize(lf).isNegInfinity)
               assert(dom.bottom(f).frequency(lf).isEmpty)

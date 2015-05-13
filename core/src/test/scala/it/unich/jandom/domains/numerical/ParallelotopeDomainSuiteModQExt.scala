@@ -60,7 +60,6 @@ class ParallelotopeDomainSuiteModQExt extends NumericalDomainSuite with Separate
   }
 
   describe("comparison of parallelotopes") {
-    //println("BOX "+box+" Full"+full);
     assert(empty < box)
     assert(box < full)
     assert(empty < full)
@@ -137,12 +136,11 @@ class ParallelotopeDomainSuiteModQExt extends NumericalDomainSuite with Separate
 
   describe("linear disequalities") {
     val li1 = dom(DenseVector(-1, 0), DenseMatrix((1.0, 1.0), (1.0, -2.0)), DenseVector(0, 0))
-    assertResult(li1) { li1.linearDisequality(1.0) }
-    assertResult(empty) { li1.linearDisequality(0.0) }
-    assertResult(li1) { li1.linearDisequality(LinearForm(1.0, 0, 1)) }
-    assertResult(li1) { li1.linearDisequality(LinearForm(0.5, 1, -2)) }
-    
-   // assertResult(empty) { li1.linearDisequality(LinearForm(0.0, 1, -2)) }
+  //  assertResult(li1) { li1.linearDisequality(1.0) }   
+  //  assertResult(empty) { li1.linearDisequality(0.0) }
+  //  assertResult(li1) { li1.linearDisequality(LinearForm(1.0, 0, 1)) }
+  //  assertResult(li1) { li1.linearDisequality(LinearForm(0.5, 1, -2)) }   
+    assertResult(empty) { li1.linearDisequality(LinearForm(0.0,1, -2)) }
   }
 
   describe("union") {
@@ -209,9 +207,9 @@ class ParallelotopeDomainSuiteModQExt extends NumericalDomainSuite with Separate
   }
 
   describe("string representation") {
-   // assertResult("[ -1.0 <= x+y <= 1.0 , -1.0 <= x-y <= 1.0 ]") { diamond.mkString(Seq("x", "y")) }
+   //assertResult("[ -1<= x+y <= 1 , -1 <= x-1y <= 1 ]") { diamond.mkString(Seq("x", "y")) }
     assertResult("empty") { empty.toString }
-    //assertResult("[ -Infinity <= v0 <= Infinity , -Infinity <= v1 <= Infinity ]") { full.toString }
+    assertResult("[ -Inf <= v0 <= +Inf , -Inf <= v1 <= +Inf ]") { full.toString }
   }
 
   describe("all parallelotopes are polyhedral") {
