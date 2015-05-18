@@ -149,9 +149,15 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
 
     require(low.length == A.rows)
     require(low.length == A.cols)
+println("A"+A);
+    println("--------");
     require(Try(A \ DenseMatrix.eye[Double](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")
-    //println(A)
-   // println("-------------");
+      
+   
+   
+    
+   
+    
     require(normalized)
 
     type Domain = ParallelotopeDomain
@@ -452,7 +458,7 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
       val known = lf.known
       val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, 0.0): _*)
       val coeffsTransformed = A.t \ coeffs
-
+    println("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
       val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != 0 && low(i).isInfinity && high(i).isInfinity }
       removeCandidates match {
         case None => {
@@ -502,7 +508,8 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
       val tcoeff = lf.homcoeffs
       
       val known = lf.known
-      println(DenseVector(tcoeff: _*));
+     
+      
      
       if (tcoeff.forall(_ == 0))
         if (known == 0) bottom else this
@@ -687,7 +694,10 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
     def rotate(Aprime: DenseMatrix[Double]): Property = {
       require(dimension == Aprime.rows && dimension == Aprime.cols)
       if (isEmpty) return this;
+    
+      
       val B = Aprime * (A \ DenseMatrix.eye[Double](dimension))
+      
       val newlow = DenseVector.zeros[Double](dimension)
       val newhigh = DenseVector.zeros[Double](dimension)
       B.foreachPair {

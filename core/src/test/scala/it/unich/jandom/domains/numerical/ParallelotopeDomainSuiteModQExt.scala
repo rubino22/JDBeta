@@ -136,10 +136,10 @@ class ParallelotopeDomainSuiteModQExt extends NumericalDomainSuite with Separate
 
   describe("linear disequalities") {
     val li1 = dom(DenseVector(-1, 0), DenseMatrix((1.0, 1.0), (1.0, -2.0)), DenseVector(0, 0))
-  //  assertResult(li1) { li1.linearDisequality(1.0) }   
-  //  assertResult(empty) { li1.linearDisequality(0.0) }
-  //  assertResult(li1) { li1.linearDisequality(LinearForm(1.0, 0, 1)) }
-  //  assertResult(li1) { li1.linearDisequality(LinearForm(0.5, 1, -2)) }   
+    assertResult(li1) { li1.linearDisequality(1.0) }   
+    assertResult(empty) { li1.linearDisequality(0.0) }
+    assertResult(li1) { li1.linearDisequality(LinearForm(1.0, 0, 1)) }
+    assertResult(li1) { li1.linearDisequality(LinearForm(0.5, 1, -2)) }   
     assertResult(empty) { li1.linearDisequality(LinearForm(0.0,1, -2)) }
   }
 
@@ -151,7 +151,10 @@ class ParallelotopeDomainSuiteModQExt extends NumericalDomainSuite with Separate
     assertResult(u2) { box union u1 }
      
     val u3 = dom(DenseVector(-1, -1), DenseMatrix((0.0, 1.0), (1.0, -1.0)), DenseVector(2, 4))
-    assertResult(u3) { u1 union diamond }
+    println("u3"+u3);
+    val u22= u1 union diamond
+    println(u22.equals(u3))
+    assertResult(u3) { u22 }
      
     val u4 = dom(DenseVector(-4, 0), DenseMatrix.eye(2), DenseVector(-2, 2))
      

@@ -152,6 +152,22 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	}
 	}
 
+  def abs(that: ModRationalGmpExt): ModRationalGmpExt = {(special,that.special) match {
+  case (NORMAL,NORMAL) => {
+    var res = new MPQ();
+     res.set_abs(that.value)      
+    new ModRationalGmpExt(res,NORMAL)}
+  case (NORMAL,_) => ModRationalGmpExt.NaN
+  case (_,NORMAL) => ModRationalGmpExt.NaN
+  case (POSINF, NEGINF) => ModRationalGmpExt.NaN
+  case (NEGINF, POSINF) => ModRationalGmpExt.NaN
+  case (NAN, _) => ModRationalGmpExt.NaN
+  case (_,NAN) => ModRationalGmpExt.NaN
+  
+    }
+  }
+  
+  
 	def isInfinite = special match {
 	case POSINF => true
 	case NEGINF => true
@@ -167,7 +183,13 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	}
 	def isInfinity =  isPosInfinity || isNegInfinity
 
-			def compare(b: ModRationalGmpExt) = value.cmp(b.value)
+			def compare(that: ModRationalGmpExt) =(special,that.special) match {
+          case (NORMAL,NORMAL) => value.cmp(that.value)
+        }
+ 
+        
+        
+        
 
 			def unary_- = special match {
 			case NORMAL => {val z= new MPQ();z.set_neg(value);new ModRationalGmpExt(z, NORMAL)}
@@ -320,8 +342,8 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	case (NORMAL,NORMAL) => {value.cmp(that.value) match {    
 	case 0 => false
 	case _ => true   
-	} 
-	}
+	    } 
+	  }
 	case (NAN,NAN) => false 
 	case (POSINF, NEGINF) => true
 	case (NEGINF, POSINF) => true
@@ -329,10 +351,10 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	case (NEGINF, NEGINF) => false   
 	case (NORMAL,_) => true
 	case (_,NORMAL) => true    
-
-
 	} 
-	/*override def ==(that: Any) : Boolean = that match {
+  
+
+  override def equals(that: Any) : Boolean = {that match {
     case that: ModRationalGmpExt =>
           {(special,that.special) match {
             case (NAN,_) => false
@@ -341,16 +363,7 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
             }
           }
   case _=> false
-  }*/
-  override def equals(that: Any) : Boolean = that match {
-    case that: ModRationalGmpExt =>
-          {(special,that.special) match {
-            case (NAN,_) => false
-            case (_,NAN) => false  
-            case (_,_) => !(this!=that)
-            }
-          }
-  case _=> false
+  }
   }
 /*	 override def equals(other: Any): Boolean = {
     other match {
@@ -480,31 +493,34 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 	extends OpSolveMatrixBy.Impl2[DenseMatrix[ModRationalGmpExt], DenseMatrix[ModRationalGmpExt], DenseMatrix[ModRationalGmpExt]] {
 
 		def LUSolve(X: DenseMatrix[ModRationalGmpExt], A: DenseMatrix[ModRationalGmpExt]) = {
-
-			var perm = (0 until A.rows).toArray        
+   
+			var perm = (0 until A.rows).toArray      
+    
 					for (i <- 0 until A.rows) {              
-						val optPivot = (i until A.rows) find { p => A(perm(p), perm(i)) != ModRationalGmpExt.zero}
-						val pivotRow = optPivot.getOrElse(throw new MatrixSingularException())              
+						val optPivot = (i until A.rows) find { p =>  A(perm(p),i) != ModRationalGmpExt.zero}
+						val pivotRow = optPivot.getOrElse(throw new MatrixSingularException())
+                       
+            
 								val tmp = perm(i)                   
 								perm(i) = perm(pivotRow)                 
 								perm(pivotRow) = tmp                   
-								val pivot = A(perm(i), perm(i))                 
-								for (j <- i + 1 until A.rows) {
-									val coeff = A(perm(j),perm(i)) / pivot
+								val pivot = A(perm(i), i)
+               
+               for (j <- i + 1 until A.rows) {
+									val coeff = A(perm(j),i) / pivot
 											A(perm(j), ::) -= A(perm(i), ::) * coeff
 											X(perm(j), ::) -= X(perm(i), ::) * coeff
 								}
 
 					}
-
-			for (i <- A.rows - 1 to (0, -1)) {   
-
-				X(perm(i), ::) /= A(perm(i), perm(i))          
+			for (i <- A.rows - 1 to (0, -1)) { 
+				X(perm(i), ::) /= A(perm(i), i)          
 						for (j <- i - 1 to (0, -1)) {                
-							X(perm(j), ::) -= X(perm(i), ::) * A(perm(j), perm(i))              
+							X(perm(j), ::) -= X(perm(i), ::) * A(perm(j), i)              
 						}
 			}
 		}
+    
 		override def apply(A: DenseMatrix[ModRationalGmpExt], V: DenseMatrix[ModRationalGmpExt]): DenseMatrix[ModRationalGmpExt] = {
 			require(A.rows == V.rows, "Non-conformant matrix sizes")
 
@@ -528,6 +544,7 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 	extends OpSolveMatrixBy.Impl2[DenseMatrix[ModRationalGmpExt], DenseVector[ModRationalGmpExt], DenseVector[ModRationalGmpExt]] {
 		override def apply(a: DenseMatrix[ModRationalGmpExt], b: DenseVector[ModRationalGmpExt]): DenseVector[ModRationalGmpExt] = {
 				val rv: DenseMatrix[ModRationalGmpExt] = a \ new DenseMatrix[ModRationalGmpExt](b.size, 1, b.data, b.offset, b.stride, true)
+      
 						new DenseVector[ModRationalGmpExt](rv.data)
 		}
 	}

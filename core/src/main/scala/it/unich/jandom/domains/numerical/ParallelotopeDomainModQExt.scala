@@ -160,14 +160,14 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
    require(low.length == A.rows)
     
    require(low.length == A.cols)
-   
-   println("A "+A+"  "+"      LOW "+low+"     HIGH   "+high)
+   println("--------");
+   println(A)
    println("--------");
    
     require(Try(A \ DenseMatrix.eye[ModRationalGmpExt](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")     
     require(normalized)
-    //print("Low "+low+" --High ");
-  // println(" "+high+" ===>"+isEmpty)
+    print("Low "+low+" --High ");
+   println(" "+high+" ===>"+isEmpty)
     type Domain = ParallelotopeDomainModRationalGmpExt
 
     def domain = ParallelotopeDomainModRationalGmpExt.this
@@ -471,7 +471,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
       val known = lf.known
       val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, ModRationalGmpExt.zero): _*)
       val coeffsTransformed = A.t \ coeffs
-
+      //println("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
       val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != ModRationalGmpExt.zero && low(i).isInfinity && high(i).isInfinity }
       removeCandidates match {
         case None => {
@@ -483,7 +483,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
           val lfArgmin = coeffsTransformed mapPairs { case (i, c) => if (c > ModRationalGmpExt.zero) low(i) else high(i) }
 
           val infinities = (0 until dimension) filter { i => lfArgmin(i).isInfinity && coeffsTransformed(i) != ModRationalGmpExt.zero }         
-         println(infinities);
+      
           infinities.size match {
             case 0 => 
               for (i <- 0 until dimension) {
@@ -505,12 +505,11 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
           // TODO: check.. I think this may generate non-invertible matrices
          
           val newA = A.copy
-           println("A"+A);
+           
           val newhigh = high.copy
           newA(chosen, ::) := coeffs.t
           newhigh(chosen) = -known
-           println("A"+A);
-           println("NewA"+newA);
+          
           new Property(false, low, newA, newhigh)
         }
       }
@@ -729,9 +728,14 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
     def rotate(Aprime: DenseMatrix[ModRationalGmpExt]): Property = {
       require(dimension == Aprime.rows && dimension == Aprime.cols)
       if (isEmpty) return this;
+   
       val B = Aprime * (A \ DenseMatrix.eye[ModRationalGmpExt](dimension))
+      
       val newlow = DenseVector.zeros[ModRationalGmpExt](dimension)
       val newhigh = DenseVector.zeros[ModRationalGmpExt](dimension)
+      
+  
+      
       B.foreachPair {
         case ((i, j), v) =>
           if (v > ModRationalGmpExt.zero) {
