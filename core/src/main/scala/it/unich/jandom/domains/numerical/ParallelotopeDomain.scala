@@ -147,19 +147,14 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
     val high: DenseVector[Double])
     extends NumericalProperty[Property] {
 
-    require(low.length == A.rows)
-    require(low.length == A.cols)
-println("A"+A);
     println("--------");
+   println(A)
+   println("--------");
     require(Try(A \ DenseMatrix.eye[Double](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")
       
-   
-   
-    
-   
-    
     require(normalized)
-
+  print("Low "+low+" --High ");
+   println(" "+high+" ===>"+isEmpty)
     type Domain = ParallelotopeDomain
 
     def domain = ParallelotopeDomain.this
@@ -458,8 +453,9 @@ println("A"+A);
       val known = lf.known
       val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, 0.0): _*)
       val coeffsTransformed = A.t \ coeffs
-    println("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
+    print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
       val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != 0 && low(i).isInfinity && high(i).isInfinity }
+      println("removeCandidates "+removeCandidates);
       removeCandidates match {
         case None => {
           val newlow = low.copy

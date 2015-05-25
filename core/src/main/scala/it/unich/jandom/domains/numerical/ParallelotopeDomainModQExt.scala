@@ -26,10 +26,9 @@ import it.unich.jandom.utils.numberext.ModRationalGmpExt
 import it.unich.jandom.utils.numberext.ModRationalGmpExt
 
 /**
- * This is the abstract domain of parallelotopes as appears in the NSAD 2012 paper. It is written
- * using the Breeze Math library. It is not safe, due to rounding problem of arithmetic.
+ * This is the base class for rational extensions
  *
- * @author Marco Rubino 
+ * @author Marco Rubino <marco.rubino@unich.it>
  */
 class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends NumericalDomain {
 
@@ -246,7 +245,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
        */
       type PrioritizedConstraint = (DenseVector[ModRationalGmpExt], ModRationalGmpExt, ModRationalGmpExt, Int)
 
-      /**
+      /*
        * Given a linear form `v`, compute a prioritized constraint `(v,m,M,p)`. The parameter `ownedBy`
        * tells whether the line form under consideration is one of the "native" forms of this (1) or
        * that (2). This is used to refine priorities.
@@ -471,8 +470,9 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
       val known = lf.known
       val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, ModRationalGmpExt.zero): _*)
       val coeffsTransformed = A.t \ coeffs
-      //println("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
+     print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
       val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != ModRationalGmpExt.zero && low(i).isInfinity && high(i).isInfinity }
+      println(" removeCandidates "+removeCandidates);
       removeCandidates match {
         case None => {
           val newlow = low.copy

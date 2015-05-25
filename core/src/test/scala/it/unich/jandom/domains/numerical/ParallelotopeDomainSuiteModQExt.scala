@@ -151,10 +151,7 @@ class ParallelotopeDomainSuiteModQExt extends NumericalDomainSuite with Separate
     assertResult(u2) { box union u1 }
      
     val u3 = dom(DenseVector(-1, -1), DenseMatrix((0.0, 1.0), (1.0, -1.0)), DenseVector(2, 4))
-    println("u3"+u3);
-    val u22= u1 union diamond
-    println(u22.equals(u3))
-    assertResult(u3) { u22 }
+    assertResult(u3) { u1 union diamond }
      
     val u4 = dom(DenseVector(-4, 0), DenseMatrix.eye(2), DenseVector(-2, 2))
      

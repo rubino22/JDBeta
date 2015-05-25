@@ -16,6 +16,13 @@
  * along with JANDOM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+/**
+ * This is the abstract domain of parallelotopes as appears in the NSAD 2012 paper. It is written
+ * using the Breeze Math library with the extension numbers using rational numbers library GMP
+ *
+ * @author Marco Rubino <marco.rubino@unich.it>
+ */
 package it.unich.jandom.utils.numberext
 
 import NumberExt.SpecialValues._
@@ -29,7 +36,7 @@ import org.netlib.util.intW
 import it.unich.jandom.utils.breeze.countNonZero
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import it.unich.jandom.utils.numberext.GenericNumberExt.NEGINF
+
 
 /**
  * 
@@ -83,7 +90,7 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	
 	}  
 	} 
-	def /(that: ModRationalGmpExt): ModRationalGmpExt ={ (special,that.special) match {      
+	def /(that: ModRationalGmpExt): ModRationalGmpExt ={(special,that.special) match {      
 	case (NORMAL,NORMAL) => {  val zero= new MPQ(); zero.set_d(0);
 	if(!that.value.equal(zero)){val z= new MPQ(); z.set_div(value, that.value); return new ModRationalGmpExt(z,NORMAL)}else{ 
 		if(!value.equal(zero)){                
@@ -152,17 +159,16 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
 	}
 	}
 
-  def abs(that: ModRationalGmpExt): ModRationalGmpExt = {(special,that.special) match {
-  case (NORMAL,NORMAL) => {
+  def abs(): ModRationalGmpExt = {(special) match {
+  case (NORMAL) => {
     var res = new MPQ();
-     res.set_abs(that.value)      
+     res.set_abs(value)      
     new ModRationalGmpExt(res,NORMAL)}
-  case (NORMAL,_) => ModRationalGmpExt.NaN
-  case (_,NORMAL) => ModRationalGmpExt.NaN
-  case (POSINF, NEGINF) => ModRationalGmpExt.NaN
-  case (NEGINF, POSINF) => ModRationalGmpExt.NaN
-  case (NAN, _) => ModRationalGmpExt.NaN
-  case (_,NAN) => ModRationalGmpExt.NaN
+  
+  case (POSINF) => ModRationalGmpExt.NaN
+  case (NEGINF) => ModRationalGmpExt.NaN
+  case (NAN) => ModRationalGmpExt.NaN
+ 
   
     }
   }
@@ -355,7 +361,7 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
   
 
   override def equals(that: Any) : Boolean = {that match {
-    case that: ModRationalGmpExt =>
+    case that: ModRationalGmpExt => 
           {(special,that.special) match {
             case (NAN,_) => false
             case (_,NAN) => false  
@@ -432,6 +438,8 @@ implicit object scalar extends Field[ModRationalGmpExt] {
 			def <(a: ModRationalGmpExt, b: ModRationalGmpExt) = a < b
 
 			def <=(a: ModRationalGmpExt, b: ModRationalGmpExt) = a <= b
+      
+      def abs(a: ModRationalGmpExt) = a.abs()
 
 			implicit val normImpl: norm.Impl[ModRationalGmpExt, Double] = new norm.Impl[ModRationalGmpExt, Double] {
 				def apply(v: ModRationalGmpExt): Double =v.value.get_d
@@ -492,35 +500,47 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 	implicit object implOpSolveMatrixBy_DRR_DRR_eq_DRR
 	extends OpSolveMatrixBy.Impl2[DenseMatrix[ModRationalGmpExt], DenseMatrix[ModRationalGmpExt], DenseMatrix[ModRationalGmpExt]] {
 
-		def LUSolve(X: DenseMatrix[ModRationalGmpExt], A: DenseMatrix[ModRationalGmpExt]) = {
-   
-			var perm = (0 until A.rows).toArray      
+  
     
-					for (i <- 0 until A.rows) {              
+		def LUSolve(X: DenseMatrix[ModRationalGmpExt], A: DenseMatrix[ModRationalGmpExt]) = {
+    
+    
+			var perm = (0 until A.rows).toArray 
+					for (i <- 0 until A.rows) {  
 						val optPivot = (i until A.rows) find { p =>  A(perm(p),i) != ModRationalGmpExt.zero}
 						val pivotRow = optPivot.getOrElse(throw new MatrixSingularException())
-                       
-            
 								val tmp = perm(i)                   
 								perm(i) = perm(pivotRow)                 
-								perm(pivotRow) = tmp                   
-								val pivot = A(perm(i), i)
-               
+								perm(pivotRow) = tmp
+                 
+								val pivot = A(perm(i), i)                
                for (j <- i + 1 until A.rows) {
 									val coeff = A(perm(j),i) / pivot
-											A(perm(j), ::) -= A(perm(i), ::) * coeff
-											X(perm(j), ::) -= X(perm(i), ::) * coeff
+                  A(perm(j), ::) -= A(perm(i), ::) * coeff
+									X(perm(j), ::) -= X(perm(i), ::) * coeff                  
 								}
-
 					}
+     
 			for (i <- A.rows - 1 to (0, -1)) { 
-				X(perm(i), ::) /= A(perm(i), i)          
-						for (j <- i - 1 to (0, -1)) {                
-							X(perm(j), ::) -= X(perm(i), ::) * A(perm(j), i)              
+				X(perm(i), ::) /= A(perm(i), i)
+						for (j <- i - 1 to (0, -1)) {               
+							X(perm(j), ::) -= X(perm(i), ::) * A(perm(i), j)
 						}
+         
 			}
+      
+      
+			for( z<- 0 until A.rows){
+				X(z,::) :=X(perm(z),::)
+					
+			}  
+
+      
 		}
     
+    
+    
+  
 		override def apply(A: DenseMatrix[ModRationalGmpExt], V: DenseMatrix[ModRationalGmpExt]): DenseMatrix[ModRationalGmpExt] = {
 			require(A.rows == V.rows, "Non-conformant matrix sizes")
 
@@ -533,9 +553,9 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 
 						X := V
 						Y := A
-						LUSolve(X, Y)
-
+					LUSolve(X, Y)              
 						X
+           
 			} else
 				???
 		}
