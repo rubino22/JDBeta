@@ -147,14 +147,14 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
     val high: DenseVector[Double])
     extends NumericalProperty[Property] {
 
-    println("--------");
-   println(A)
-   println("--------");
+    //println("--------");
+   //println(A)
+  // println("--------");
     require(Try(A \ DenseMatrix.eye[Double](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")
       
     require(normalized)
-  print("Low "+low+" --High ");
-   println(" "+high+" ===>"+isEmpty)
+  //print("Low "+low+" --High ");
+  // println(" "+high+" ===>"+isEmpty)
     type Domain = ParallelotopeDomain
 
     def domain = ParallelotopeDomain.this
@@ -453,9 +453,9 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
       val known = lf.known
       val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, 0.0): _*)
       val coeffsTransformed = A.t \ coeffs
-    print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
+   // print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
       val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != 0 && low(i).isInfinity && high(i).isInfinity }
-      println("removeCandidates "+removeCandidates);
+     // println("removeCandidates "+removeCandidates);
       removeCandidates match {
         case None => {
           val newlow = low.copy
@@ -693,7 +693,7 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
     
       
       val B = Aprime * (A \ DenseMatrix.eye[Double](dimension))
-      
+    // println("B "+B+"    A"+A+"   LU "+ DenseMatrix.eye[Double](dimension));
       val newlow = DenseVector.zeros[Double](dimension)
       val newhigh = DenseVector.zeros[Double](dimension)
       B.foreachPair {
@@ -706,6 +706,7 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
             newlow(i) += v * high(j)
           }
       }
+    //  println("NNEEE "+newlow+" "+newhigh );
       new Property(false, newlow, Aprime, newhigh)
     }
 

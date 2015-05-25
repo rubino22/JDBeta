@@ -520,7 +520,8 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 									X(perm(j), ::) -= X(perm(i), ::) * coeff                  
 								}
 					}
-     
+   
+
 			for (i <- A.rows - 1 to (0, -1)) { 
 				X(perm(i), ::) /= A(perm(i), i)
 						for (j <- i - 1 to (0, -1)) {               
@@ -528,13 +529,14 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 						}
          
 			}
-      
-      
+    
+      val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)
 			for( z<- 0 until A.rows){
-				X(z,::) :=X(perm(z),::)
+				X1(z,::) +=X(perm(z),::)
 					
-			}  
-
+			} 
+      X:=X1.copy
+//println("x-"+X1); 
       
 		}
     
