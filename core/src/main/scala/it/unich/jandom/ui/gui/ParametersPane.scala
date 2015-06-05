@@ -41,13 +41,14 @@ class ParametersPane extends GridBagPanel {
   val delayModel = new SpinnerNumberModel(0, 0, Double.PositiveInfinity, 1)
   val delay = Component.wrap(new JSpinner(delayModel))
   val debug = new CheckBox("Debug")
+  
 
   layout(new Label("Widening Delay:")) = new Constraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.EAST,
     GridBagConstraints.NONE, new Insets(0, 0, 5, 5), 0, 0)
   layout(delay) = new Constraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
     GridBagConstraints.HORIZONTAL, new Insets(0, 0, 5, 0), 0, 0)
   layout(debug) = new Constraints(0, 5, 2, 1, 0.0, 0.0, GridBagConstraints.BASELINE,
-    GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0)
+    GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0)  
   layout(Swing.VGlue) = new Constraints(0, 6, 2, 1, 0.0, 1.0, GridBagConstraints.BASELINE,
     GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0)
 

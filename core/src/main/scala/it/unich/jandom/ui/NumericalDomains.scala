@@ -38,6 +38,7 @@ object NumericalDomains extends ParameterEnumeration[NumericalDomain] {
       "not safe and should not be used.")
     ,ParameterValue(SumIntParallelotopeDomain(), "BoxDouble + Parallelotope", "Sum of boxes and parallelotopes.")
     ,ParameterValue(ParallelotopeDomainModRationalGmpExt(), "ParallelotopeModQ", "Library GMP Wrapper ")
+    ,ParameterValue(ParallelotopeDomainModRationalGmpExt(overRound=false), "ParallelotopeModQ without Round", "Library GMP Wrapper ")
     
   )
   val default = values.last

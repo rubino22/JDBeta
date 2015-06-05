@@ -122,7 +122,7 @@ object OutputInterface {
    */
 
   private def setParameters[T <: SootCFG[T, Block]](tMethod: T, aDomain: T#DomainBase, wideningIndex: Int,
-    narrowingIndex: Int, delay: Int, debug: Boolean) = {
+    narrowingIndex: Int, delay: Int, debug: Boolean, round: Boolean) = {
     val params = new Parameters[T] { val domain = aDomain }
     params.setParameters(wideningIndex, narrowingIndex, delay, debug)
     params.wideningFactory = MemoizingFactory(tMethod)(params.wideningFactory)
@@ -140,7 +140,7 @@ object OutputInterface {
   }
 
   private def analyze[T <: SootCFG[T, Block]](method: SootCFG[T, Block], domain: Any, wideningIndex: Int,
-    narrowingIndex: Int, delay: Int, debug: Boolean): String = {
+    narrowingIndex: Int, delay: Int, debug: Boolean, round:Boolean): String = {
     try {
       val sootScene = Scene.v()
       sootScene.loadBasicClasses()
@@ -150,7 +150,7 @@ object OutputInterface {
         case domain: ObjectDomainFactory => new SootFrameObjectDomain(domain(om))
       }
       val tMethod = method.asInstanceOf[T]
-      val params = setParameters[T](tMethod, sootDomain, wideningIndex, narrowingIndex, delay, debug)
+      val params = setParameters[T](tMethod, sootDomain, wideningIndex, narrowingIndex, delay, debug, round)
       val ann = tMethod.analyze(params)
       tMethod.mkString(params)(ann)
     } catch {
@@ -162,7 +162,7 @@ object OutputInterface {
   }
 
   def analyze(dir: String, klass: Int, method: Int, isNumerical: Boolean, isBaf: Boolean, domain: Int, wideningIndex: Int,
-    narrowingIndex: Int, delay: Int, debug: Boolean): String = {
+    narrowingIndex: Int, delay: Int, debug: Boolean,round: Boolean): String = {
     val methods = getSootMethods(dir, klass)
     val selectedMethod = methods.get(method)
 
@@ -171,9 +171,9 @@ object OutputInterface {
     else
       ObjectDomains.values(domain).value
     if (isBaf)
-      analyze(new BafMethod(selectedMethod), aDomain, wideningIndex, narrowingIndex, delay, debug)
+      analyze(new BafMethod(selectedMethod), aDomain, wideningIndex, narrowingIndex, delay, debug, round)
     else
-      analyze(new JimpleMethod(selectedMethod), aDomain, wideningIndex, narrowingIndex, delay, debug)
+      analyze(new JimpleMethod(selectedMethod), aDomain, wideningIndex, narrowingIndex, delay, debug, round)
   }
 
   private def getScene(dir: String) = {

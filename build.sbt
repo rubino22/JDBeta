@@ -28,12 +28,16 @@ fork in ThisBuild := true
 
 crossPaths in ThisBuild := false
 
-//*** Resolvers
+//*** Detect GMP WRAPPER
 
-resolvers in ThisBuild ++= Seq(
-  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
-  "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
-)
+val optionalWrapperPathName = try {
+    val WrapperPathName = Path.userHome.absolutePath+"/.m2/repository/org/gnu/gmp/swig/gmp-jni/1/gmp-jni-1.jar"
+    if (file(WrapperPathName).exists) Some(WrapperPathName) else None
+  } catch {
+    case _ : Exception => None 
+  }
+
+wrapperJar in ThisBuild := optionalWrapperPathName
 
 //*** Detect PPL
 

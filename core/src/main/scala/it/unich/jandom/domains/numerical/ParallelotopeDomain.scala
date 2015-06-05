@@ -153,6 +153,7 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
     require(Try(A \ DenseMatrix.eye[Double](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")
       
     require(normalized)
+    // println("Low "+low+" --High "+high);
   //print("Low "+low+" --High ");
   // println(" "+high+" ===>"+isEmpty)
     type Domain = ParallelotopeDomain
@@ -453,9 +454,9 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
       val known = lf.known
       val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, 0.0): _*)
       val coeffsTransformed = A.t \ coeffs
-   // print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
+    //print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
       val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != 0 && low(i).isInfinity && high(i).isInfinity }
-     // println("removeCandidates "+removeCandidates);
+      //println("removeCandidates "+removeCandidates);
       removeCandidates match {
         case None => {
           val newlow = low.copy
@@ -466,11 +467,13 @@ class ParallelotopeDomain private (favorAxes: Boolean) extends NumericalDomain {
           val lfArgmin = coeffsTransformed mapPairs { case (i, c) => if (c > 0) low(i) else high(i) }
 
           val infinities = (0 until dimension) filter { i => lfArgmin(i).isInfinity && coeffsTransformed(i) != 0 }
+          // println("infinite"+infinities.size);
           infinities.size match {
             case 0 =>
               for (i <- 0 until dimension) {
                 if (coeffsTransformed(i) > 0) newhigh(i) = high(i) min (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
                 else if (coeffsTransformed(i) < 0) newlow(i) = low(i) max (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
+               // println("MOD high"+newhigh);
               }
             case 1 => {
               val posinf = infinities.head

@@ -14,6 +14,15 @@ libraryDependencies ++= Seq(
   "soot" % "soot" % "2.5.0+git2" from "https://ssebuild.cased.de/nightly/soot/lib/soot-trunk.jar"
 )
 
+
+//*** Additional source directories for Wrapper
+
+unmanagedJars in Compile ++= (wrapperJar.value map file).toSeq
+
+
+//*** Eclipse plugin
+
+
 //*** Additional source directories for PPL
 
 unmanagedJars in Compile ++= (pplJar.value map file).toSeq

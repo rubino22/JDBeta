@@ -111,13 +111,14 @@ object NumericCondition {
    */
   case class AtomicCond(numexpr: NumericExpression, op: ComparisonOperators.Value) extends NumericCondition {
 
-    override def analyze[Property <: NumericalProperty[Property]](input: Property): Property = op match {
+    override def analyze[Property <: NumericalProperty[Property]](input: Property): Property =op match {
       case ComparisonOperators.LTE => numexpr.lteZero(input)
       case ComparisonOperators.LT => numexpr.ltZero(input)
       case ComparisonOperators.GTE => (-numexpr).lteZero(input)
       case ComparisonOperators.GT => (-numexpr).ltZero(input)
       case ComparisonOperators.NEQ => numexpr.neqZero(input)
       case ComparisonOperators.EQ => (-numexpr).lteZero(numexpr.lteZero(input))
+     
     }
 
     lazy val opposite = new AtomicCond(numexpr, ComparisonOperators.opposite(op))

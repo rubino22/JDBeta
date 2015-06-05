@@ -24,13 +24,14 @@ import it.unich.jandom.utils.breeze.countNonZero
 import breeze.linalg._
 import it.unich.jandom.utils.numberext.ModRationalGmpExt
 import it.unich.jandom.utils.numberext.ModRationalGmpExt
+import it.unich.jandom.ui.Parameter
 
 /**
  * This is the base class for rational extensions
  *
  * @author Marco Rubino <marco.rubino@unich.it>
  */
-class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends NumericalDomain {
+class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRound: Boolean) extends NumericalDomain {
 
   import breeze.linalg.operators._
   /**
@@ -55,7 +56,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
     
     val isEmpty = (0 until low1.size) exists { i => low1(i) > high1(i) }
     val isEmpty2 = (0 until low1.size) exists { i => low1(i).isInfinite && low1(i) == high1(i) }
-  println("A12");
+ 
     new Property(isEmpty || isEmpty2, low1, A1, high1)
   }
 
@@ -156,18 +157,19 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
     val A: DenseMatrix[ModRationalGmpExt],
     val high: DenseVector[ModRationalGmpExt])
     extends NumericalProperty[Property] {
-     
+    
    require(low.length == A.rows)
     
    require(low.length == A.cols)
+
    //println("--------");
   // println(A)
   // println("--------");
    
     require(Try(A \ DenseMatrix.eye[ModRationalGmpExt](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")     
     require(normalized)
-   // print("Low "+low+" --High ");
-  // println(" "+high+" ===>"+isEmpty)
+    //println("Low "+low+" --High "+high);
+   
     type Domain = ParallelotopeDomainModRationalGmpExt
 
     def domain = ParallelotopeDomainModRationalGmpExt.this
@@ -476,10 +478,11 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
 
       val known = lf.known
       val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, ModRationalGmpExt.zero): _*)
+     //println("entro")
       val coeffsTransformed = A.t \ coeffs
-     
+     //print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
       val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != ModRationalGmpExt.zero && low(i).isInfinity && high(i).isInfinity }
-      
+      // println("removeCandidates "+removeCandidates);
       removeCandidates match {
         case None => {
           val newlow = low.copy
@@ -490,13 +493,15 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
           val lfArgmin = coeffsTransformed mapPairs { case (i, c) => if (c > ModRationalGmpExt.zero) low(i) else high(i) }
 
           val infinities = (0 until dimension) filter { i => lfArgmin(i).isInfinity && coeffsTransformed(i) != ModRationalGmpExt.zero }         
-      
+     // println("infinite"+infinities.size);
           infinities.size match {
             case 0 => 
               for (i <- 0 until dimension) {
+               // println("PRE"+high);
                 if (coeffsTransformed(i) > ModRationalGmpExt.zero) newhigh(i) = high(i) min (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
                 else if (coeffsTransformed(i) < ModRationalGmpExt.zero) newlow(i) = low(i) max (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
-              }
+              // println("POST high"+newhigh);
+                }
             case 1 => { 
               val posinf = infinities.head
               if (coeffsTransformed(posinf) < ModRationalGmpExt.zero)
@@ -786,7 +791,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
       def lfToString(lf: DenseVector[ModRationalGmpExt]): String = {
         var first = true
         var s = ""
-
+        
         for (index <- 0 until dimension) {
           val coeff = lf(index)
           val term = coeff match {
@@ -809,10 +814,20 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
       if (isEmpty)
         "empty"
       else {
+        
         val eqns = for (i <- 0 until dimension) yield {
-          if (low(i) < high(i))
+          if (low(i) < high(i)){
+            if(overRound){
+            low(i).rounds("Down") + " <= " + lfToString(A.t(::, i)) + " <= " + high(i).rounds("Up")
+          }else{
             low(i) + " <= " + lfToString(A.t(::, i)) + " <= " + high(i)
-          else lfToString(A.t(::, i)) + " = " + high(i)
+          }
+        }
+          else{   if(overRound){
+            lfToString(A.t(::, i)) + " = " + high(i).rounds("Up")}else{
+              lfToString(A.t(::, i)) + " = " + high(i)
+            }
+            }
         }
         eqns.mkString("[ ", " , ", " ]")
       }
@@ -825,8 +840,10 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean) extends 
  * Companion class for the parallelotope domain
  */
 object ParallelotopeDomainModRationalGmpExt {
-  private lazy val standard = new ParallelotopeDomainModRationalGmpExt(false) with CachedTopBottom
-  private lazy val favoring = new ParallelotopeDomainModRationalGmpExt(true) with CachedTopBottom
+  private lazy val standard = new ParallelotopeDomainModRationalGmpExt(false, true) with CachedTopBottom
+  private lazy val favoring = new ParallelotopeDomainModRationalGmpExt(true, true) with CachedTopBottom
+  private lazy val standard1 = new ParallelotopeDomainModRationalGmpExt(false, false) with CachedTopBottom
+  private lazy val favoring1 = new ParallelotopeDomainModRationalGmpExt(true, false) with CachedTopBottom
 
   /**
    * Returns an abstract domain for parallelotopes.
@@ -834,5 +851,5 @@ object ParallelotopeDomainModRationalGmpExt {
    * along axes at the minimum. This is generally useful when the domain is one of the component of the sum
    * combinator.
    */
-  def apply(favorAxes: Boolean = false) = if (favorAxes) favoring else standard
+  def apply(favorAxes: Boolean = false, overRound: Boolean = true) =if(overRound){ if (favorAxes) favoring else standard} else { if (favorAxes) favoring1 else standard1}  
 }

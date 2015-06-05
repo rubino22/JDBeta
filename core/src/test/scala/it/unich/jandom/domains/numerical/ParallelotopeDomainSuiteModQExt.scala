@@ -20,7 +20,6 @@ package it.unich.jandom.domains.numerical
 
 import it.unich.jandom.domains.{EmptyExistsSuite, SeparatedTopAndBottomSuite}
 import breeze.linalg.{DenseMatrix, DenseVector}
-import it.unich.jandom.utils.numberext.ModQ
 import it.unich.jandom.utils.numberext.ModRationalGmpExt
 
 /**
