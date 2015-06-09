@@ -23,6 +23,7 @@ import it.unich.jandom.domains.numerical.NumericalDomain
 import it.unich.jandom.domains.numerical.NumericalProperty
 import parma_polyhedra_library._
 import it.unich.jandom.domains.CachedTopBottom
+import it.unich.jandom.utils.numberext.ModRationalGmpExt
 
 /**
  * This is the universal PPL numerical property. It encapsulate an object of the PPL library and

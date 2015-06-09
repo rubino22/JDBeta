@@ -850,6 +850,7 @@ object ParallelotopeDomainModRationalGmpExt {
    * @param favorAxes determines whether the heuristics built into the domain should try to keep the variability
    * along axes at the minimum. This is generally useful when the domain is one of the component of the sum
    * combinator.
+   * if overRound is false the result the values ​​of the results are presented in the form of rational n/d
    */
   def apply(favorAxes: Boolean = false, overRound: Boolean = true) =if(overRound){ if (favorAxes) favoring else standard} else { if (favorAxes) favoring1 else standard1}  
 }

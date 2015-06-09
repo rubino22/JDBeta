@@ -19,10 +19,8 @@
 package it.unich.jandom
 
 import java.io.{ File, FileReader }
-
 import scala.collection.immutable.PagedSeq
 import scala.util.parsing.input.PagedSeqReader
-
 import it.unich.jandom.domains.DimensionFiberedProperty
 import it.unich.jandom.domains.numerical.BoxDoubleDomain
 import it.unich.jandom.domains.numerical.LinearForm
@@ -34,8 +32,9 @@ import it.unich.jandom.ppfactories._
 import it.unich.jandom.ppfactories.PPFactory.ConstantFactory
 import it.unich.jandom.targets.lts.LTS
 import it.unich.jandom.widenings.DefaultWidening
-
 import parma_polyhedra_library.C_Polyhedron
+import it.unich.jandom.domains.numerical.ParallelotopeDomainModRationalGmpExt
+import it.unich.jandom.utils.numberext.ModRationalGmpExt
 
 /**
  * Example program using ''Jandom'' to analyze the Alice benchmarks and
@@ -55,6 +54,11 @@ object JandomSumBench extends App {
     val d = PPLDomain[C_Polyhedron]
     c.foldLeft(d.top(dimension)) { (p: d.Property, lf: LinearForm[Double]) => p.linearInequality(lf) }
   }
+ /* 
+  def CStoPolyehdraEXT(dimension: Int, c: Seq[LinearForm[ModRationalGmpExt]]) = {
+    val d = PPLDomain[C_Polyhedron]
+    c.foldLeft(d.top(dimension)) { (p: d.Property, lf: LinearForm[ModRationalGmpExt]) => p.linearInequalityExt(lf) }
+  }*/
 
   def mkString[U <: DimensionFiberedProperty[U]](program: LTS, m: scala.collection.Map[LTS#ProgramPoint, U]): String = {
     (for ((loc, prop) <- m) yield loc.name + " => " + prop.mkString(program.env.variables)).mkString(", ")
@@ -102,26 +106,45 @@ object JandomSumBench extends App {
     val ann3 = program.analyze(params3)
     val tann3 = System.currentTimeMillis - t3
 
+    
+    val params4 = new targets.Parameters[LTS] { val domain = ParallelotopeDomainModRationalGmpExt(overRound=true) }
+    params4.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
+    //params4.debugWriter = new java.io.PrintWriter(System.out)
+
+    program.analyze(params4) // warmup JVM
+    //params4.debugWriter.flush()
+
+    val t4 = System.currentTimeMillis
+    val ann4 = program.analyze(params4)
+    val tann4 = System.currentTimeMillis - t4
+    
     val cann1 = ann1 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
     val cann2 = ann2 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
-    val cann3 = ann3 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+    val cann3 = ann3 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }    
+    val cann4 = ann4 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
 
-    println(s"Times:  ${tann1} vs  ${tann2}")
+   // println(s"Times:  ${tann1} vs  ${tann2}")
+     println(s"Times:  ${tann4} vs  ${tann3}")
     print("Box: ")
     println(mkString(program, cann1))
     print("PTope: ")
     println(mkString(program, cann3))
+    print("PTopeExt: ")
+    println(mkString(program, cann4))
     print("Sum: ")
     println(mkString(program, cann2))
 
     // SOSTITUIRE cann1 con cann3 se si vuole il confronto con i Parallelotopi.
-    val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc) intersection cann3(loc))) }
+    //val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc) intersection cann3(loc))) }
 
     //comparing sum with box
     //val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc))) }
 
     //comparing sum with parallelotope
     //val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann3(loc))) }
+    
+    //comparing sum with parallelotope
+    val comp = cann3 map { case (loc, v) => (loc -> v.tryCompareTo(cann4(loc))) }
 
     println("COUNT EQUALS: " + comp.count(_._2 == Some(0)))
     println("COUNT BETTER SUM: " + comp.count(_._2 == Some(-1)))

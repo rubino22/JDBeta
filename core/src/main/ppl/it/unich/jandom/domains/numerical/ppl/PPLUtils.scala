@@ -51,6 +51,8 @@ private[jandom] object PPLUtils {
     }
   }
 
+  
+  
   /**
    * Converts a PPL linear expression couple with a coefficient for the denominator into a LinearForm.
    */

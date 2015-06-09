@@ -572,7 +572,14 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 				X1(z,::) +=X(perm(z),::)
 					
 			} 
+    /*   val A1= DenseMatrix.zeros[ModRationalGmpExt](A.rows, A.cols)
+      for( z<- 0 until A.rows){
+        A1(z,::) +=A(perm(z),::)
+          
+      } 
+      */
       X:=X1.copy
+     // A:=A1.copy
 
       
 		}
