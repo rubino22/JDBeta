@@ -35,6 +35,9 @@ import it.unich.jandom.widenings.DefaultWidening
 import parma_polyhedra_library.C_Polyhedron
 import it.unich.jandom.domains.numerical.ParallelotopeDomainModRationalGmpExt
 import it.unich.jandom.utils.numberext.ModRationalGmpExt
+import parma_polyhedra_library.PPL_Object
+import it.unich.jandom.domains.numerical.ppl.PPLDomainSuiteOctagon
+import parma_polyhedra_library.Octagonal_Shape_double
 
 /**
  * Example program using ''Jandom'' to analyze the Alice benchmarks and
@@ -42,19 +45,18 @@ import it.unich.jandom.utils.numberext.ModRationalGmpExt
  * the result of the analyisis with standard Kleene iteration and worklist
  * based ones.
  */
-object JandomSumBench extends App {
+object JandomModQBench extends App {
 
   var totalEquals = 0
-  var totalBestSum = 0
+  var totalBestPPL = 0
   var totalBestOther = 0
   var totalUncomparable = 0
   var totalPrograms = 0
 
   def CStoPolyehdra(dimension: Int, c: Seq[LinearForm[Double]]) = {
-    val d = PPLDomain[C_Polyhedron]
+    val d = PPLDomain[C_Polyhedron]    
     c.foldLeft(d.top(dimension)) { (p: d.Property, lf: LinearForm[Double]) => p.linearInequality(lf) }
   }
- 
 
   def mkString[U <: DimensionFiberedProperty[U]](program: LTS, m: scala.collection.Map[LTS#ProgramPoint, U]): String = {
     (for ((loc, prop) <- m) yield loc.name + " => " + prop.mkString(program.env.variables)).mkString(", ")
@@ -72,23 +74,31 @@ object JandomSumBench extends App {
     val program = parsed.get
     println("WIDENINGS: " + program.locations.filter(program.isJoinNode).map(_.name).mkString(", "))
 
-    val params = new targets.Parameters[LTS] { val domain = BoxDoubleDomain(false) }
-    params.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopes
-    program.analyze(params) // warmup JVM
+    val params1 = new targets.Parameters[LTS] { val domain = PPLDomain[Octagonal_Shape_double]()}
+    params1.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopes
+    //params3.debugWriter = new java.io.PrintWriter(System.out)
+
+    program.analyze(params1) // warmup JVM
+    //params3.debugWriter.flush()
 
     val t1 = System.currentTimeMillis
-    val ann1 = program.analyze(params)
+    val ann1 = program.analyze(params1)
     val tann1 = System.currentTimeMillis - t1
-
-    val params2 = new targets.Parameters[LTS] { val domain = SumIntParallelotopeDomain() }
+    
+  
+    
+    //val params2 = new targets.Parameters[LTS] { val domain = PPLDomain[C_Polyhedron]()}
+    val params2 = new targets.Parameters[LTS] { val domain = PPLDomain[C_Polyhedron]()}
     params2.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopes
-    //params2.debugWriter = new java.io.PrintWriter(System.out)
+    //params3.debugWriter = new java.io.PrintWriter(System.out)
+
     program.analyze(params2) // warmup JVM
-    //params2.debugWriter.flush()
+    //params3.debugWriter.flush()
 
     val t2 = System.currentTimeMillis
     val ann2 = program.analyze(params2)
     val tann2 = System.currentTimeMillis - t2
+    
 
 
     val params3 = new targets.Parameters[LTS] { val domain = ParallelotopeDomain() }
@@ -113,25 +123,26 @@ object JandomSumBench extends App {
     val t4 = System.currentTimeMillis
     val ann4 = program.analyze(params4)
     val tann4 = System.currentTimeMillis - t4
-    
+   
     val cann1 = ann1 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
     val cann2 = ann2 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
-    val cann3 = ann3 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }    
+    val cann3 = ann3 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
     val cann4 = ann4 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
 
-   // println(s"Times:  ${tann1} vs  ${tann2}")
-     println(s"Times:  ${tann4} vs  ${tann3}")
-    print("Box: ")
+   
+    //println(s"Times:  ${tann4} vs  ${tann2}")
+    print("PPL Octagon_Shape_double: ")
     println(mkString(program, cann1))
+    print("PPL C_Polyhedron: ")
+    println(mkString(program, cann2))
     print("PTope: ")
     println(mkString(program, cann3))
     print("PTopeExt: ")
     println(mkString(program, cann4))
-    print("Sum: ")
-    println(mkString(program, cann2))
+   
 
     // SOSTITUIRE cann1 con cann3 se si vuole il confronto con i Parallelotopi.
-    val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc) intersection cann3(loc))) }
+    // val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc) intersection cann4(loc))) }
 
     //comparing sum with box
     //val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc))) }
@@ -140,15 +151,15 @@ object JandomSumBench extends App {
     //val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann3(loc))) }
     
     //comparing sum with parallelotope
-    //val comp = cann3 map { case (loc, v) => (loc -> v.tryCompareTo(cann4(loc))) }
+    val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann4(loc))) }
 
     println("COUNT EQUALS: " + comp.count(_._2 == Some(0)))
-    println("COUNT BETTER SUM: " + comp.count(_._2 == Some(-1)))
+    println("COUNT BETTER PPL: " + comp.count(_._2 == Some(-1)))
     println("COUNT BETTER OTHER: " + comp.count(_._2 == Some(1)))
     println("COUNT UNCOMPARABLES: " + comp.count(_._2 == None))
 
     totalEquals += comp.count(_._2 == Some(0))
-    totalBestSum += comp.count(_._2 == Some(-1))
+    totalBestPPL += comp.count(_._2 == Some(-1))
     totalBestOther += comp.count(_._2 == Some(1))
     totalUncomparable += comp.count(_._2 == None)
 
@@ -156,17 +167,19 @@ object JandomSumBench extends App {
     //println(s"Times:  ${tann1} vs  ${tann2}")
     //println("WIDENINGS: " + program.locations.filter(program.isJoinNode).map(_.name).mkString(", "))
     println("EQUALS: " + program.locations.filter(comp(_) == Some(0)).map(_.name).mkString(", "))
-    println("BETTER SUM: " + program.locations.filter(comp(_) == Some(-1)).map(_.name).mkString(", "))
+    println("BETTER PPL: " + program.locations.filter(comp(_) == Some(-1)).map(_.name).mkString(", "))
     println("BETTER OTHER: " + program.locations.filter(comp(_) == Some(1)).map(_.name).mkString(", "))
     println("UNCOMPARABLES: " + program.locations.filter(comp(_) == None).map(_.name).mkString(", "))
   }
 
   val resources = getClass.getResource("/fast/").toURI;
+  //val resources2 = getClass.getResource("/fast/gonnord2.fst").toURI;
 
   var badPrograms = Seq[File]()
 
   // This analyzes all models (does not terminate for descending2 with
-
+ /* val file= new File(resources2)
+   fastModelAnalyze(file) */
   for (model <- new File(resources).listFiles()) {
     try {
       fastModelAnalyze(model)
@@ -184,7 +197,7 @@ object JandomSumBench extends App {
   println(s"Number of programs: ${totalPrograms}")
   println(s"""Bad programs: ${badPrograms.mkString("\n")}""")
   println(s"Total equals: ${totalEquals}")
-  println(s"Total best sum: ${totalBestSum}")
+  println(s"Total best ppl: ${totalBestPPL}")
   println(s"Total best other: ${totalBestOther}")
   println(s"Total uncomparables: ${totalUncomparable}")
 

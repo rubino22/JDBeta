@@ -140,6 +140,7 @@ object DenseLinearForm {
         Nil
       else {
         val pair = pairs.head
+       
         if (pair._1 == n)
           pair._2 :: pairsToCoeffs(pairs.tail, n+1)
         else

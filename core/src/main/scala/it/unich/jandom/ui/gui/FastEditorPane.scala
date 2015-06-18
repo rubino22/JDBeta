@@ -259,8 +259,9 @@ class FastEditorPane(val frame: MainFrame) extends ScrollPane with TargetPane {
         val numericalDomain = frame.parametersPane.selectedNumericalDomain
         //val params = new Parameters[LTS] { val domain = numericalDomain }
         val params = new targets.Parameters[LTS] { val domain = numericalDomain }
-        frame.parametersPane.setParameters(params)
-     //params.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
+       
+      //  frame.parametersPane.setParameters(params)
+     params.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
        val ann = program.analyze(params)        
         Option((params, program, ann))
       case parser.NoSuccess(msg, next) =>

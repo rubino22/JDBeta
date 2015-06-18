@@ -558,28 +558,29 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 								}
                 
 					}
- 
-      for (i <- A.rows - 1 to (0, -1)) { 
-       
+  //val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)  
+      val X1= new DenseMatrix[ModRationalGmpExt](X.rows, X.cols)
+      for (i <- A.rows - 1 to (0, -1)) {
+        X1(i, ::) := X(perm(i), ::)
             for (j <- i + 1 until A.rows) {               
-              X(perm(i), ::) -= X(perm(j), ::) * A(perm(i), j)
+              //X(perm(i), ::) -= X(perm(j), ::) * A(perm(i), j)
+              X1(i, ::) -= X1(j, ::) * A(perm(i), j)
             }
-          X(perm(i), ::) /= A(perm(i), i)
+          //X(perm(i), ::) /= A(perm(i), i)
+         X1(i, ::) /= A(perm(i), i)
       }
+   
       
-      val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)
+        /*  val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)
 			for( z<- 0 until A.rows){
 				X1(z,::) +=X(perm(z),::)
 					
-			} 
-    /*   val A1= DenseMatrix.zeros[ModRationalGmpExt](A.rows, A.cols)
-      for( z<- 0 until A.rows){
-        A1(z,::) +=A(perm(z),::)
-          
-      } 
-      */
+			} */
+      
+      
       X:=X1.copy
-     // A:=A1.copy
+     
+     
 
       
 		}
@@ -592,10 +593,11 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 			if (A.size == 0) {
 				DenseMatrix.zeros[ModRationalGmpExt](0, 0)
 			} else if (A.rows == A.cols) {
-				val X = DenseMatrix.zeros[ModRationalGmpExt](V.rows, V.cols)
-				val Y = DenseMatrix.zeros[ModRationalGmpExt](A.rows, A.cols)
+				/* val X = DenseMatrix.zeros[ModRationalGmpExt](V.rows, V.cols)
+				val Y = DenseMatrix.zeros[ModRationalGmpExt](A.rows, A.cols) */
 						// square: LUSolve
-
+        val X = DenseMatrix.zeros[ModRationalGmpExt](V.rows, V.cols)
+        val Y = DenseMatrix.zeros[ModRationalGmpExt](A.rows, A.cols) 
 						X := V
 						Y := A
              // LUSolve2(X, Y)  

@@ -90,6 +90,7 @@ class PPLProperty[PPLNativeProperty <: AnyRef](val domain: PPLDomain[PPLNativePr
   }
 
   def linearInequality(lf: LinearForm[Double]): PPLProperty[PPLNativeProperty] = {
+    
     val (le, _) = PPLUtils.toPPLLinearExpression(lf)
     val newpplobject = domain.copyConstructor(pplobject)
     domain.refine_with_constraint(newpplobject, new Constraint(le, Relation_Symbol.LESS_OR_EQUAL, new Linear_Expression_Coefficient(new Coefficient(0))))
@@ -174,6 +175,7 @@ class PPLProperty[PPLNativeProperty <: AnyRef](val domain: PPLDomain[PPLNativePr
 
     val cs = domain.minimized_constraints(pplobject)
     cs flatMap PPLUtils.fromPPLConstraint
+    
   }
 
   def isPolyhedral = {

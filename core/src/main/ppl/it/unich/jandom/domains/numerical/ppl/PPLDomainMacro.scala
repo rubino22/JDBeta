@@ -155,6 +155,7 @@ object PPLDomainMacro {
         }
 
         def linearInequality(lf: LinearForm[Double]): ThisProperty = {
+          println("");
           val (le, den) = PPLUtils.toPPLLinearExpression(lf)
           val newpplobject = new Double_Box(pplobject)
           newpplobject.refine_with_constraint(new Constraint(le, Relation_Symbol.LESS_OR_EQUAL, new Linear_Expression_Coefficient(new Coefficient(0))))
