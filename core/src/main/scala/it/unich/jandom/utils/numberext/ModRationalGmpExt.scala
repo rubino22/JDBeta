@@ -378,17 +378,24 @@ class ModRationalGmpExt(val value: MPQ, val special: Value) extends NumberExt wi
     	 value.get_num(num)
        
     	 if(uno.cmpabs(den)!=0){
-    		 base.set_pow_ui(base, k)      
+    		 base.set_pow_ui(base, k)  
+         
     		 base.set_mul(num, base)
+      
+         ris.set_fdiv_q( base, den)
+        
     		 if(roudType.equals("Up")){
     			 if(num.get_sgn() == -1)ris.set_fdiv_q( base, den) else ris.set_cdiv_q(base, den)
     		 }else{
     			 if(num.get_sgn() == -1) ris.set_cdiv_q(base, den) else ris.set_fdiv_q( base, den)    			 
     		 }
+        
     		 val lx= ris.get_d.toString()
     		 val temp= new MPZ();
     		 temp.set_abs(ris)
+         
     		 var length2 = ( Math.log10(temp.get_d) + 1).toInt
+         
     		 var stringa=""
     		 if(ris.get_sgn() == -1){
     			 length2=length2+1
@@ -539,44 +546,55 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 	extends OpSolveMatrixBy.Impl2[DenseMatrix[ModRationalGmpExt], DenseMatrix[ModRationalGmpExt], DenseMatrix[ModRationalGmpExt]] {
 
   
-    
+   /* 
 		def LUSolve(X: DenseMatrix[ModRationalGmpExt], A: DenseMatrix[ModRationalGmpExt]) = {    
 
        
 			var perm = (0 until A.rows).toArray 
 					for (i <- 0 until A.rows-1) {  
-						val optPivot = (i until A.rows) find { p =>  A(perm(p),i) != ModRationalGmpExt.zero}
-						val pivotRow = optPivot.getOrElse(throw new MatrixSingularException())           
-						val tmp = perm(i)
-								perm(i) = perm(pivotRow)
-								perm(pivotRow) = tmp
-								val pivot = A(perm(i), i)                 
-               for (j <- i + 1 until A.rows) {
-									val coeff = A(perm(j),i) / pivot                 
-                 A(perm(j), ::) -= A(perm(i), ::) * coeff
-                 X(perm(j), ::) -= X(perm(i), ::) * coeff       
+						//val optPivot = (i until A.rows) find { p =>  A(perm(p),i) != ModRationalGmpExt.zero}
+						val optPivotuno = (i until A.rows) find { p =>  A(perm(p),i) == ModRationalGmpExt.one }
+						val pivotRow = optPivotuno.getOrElse(((i until A.rows) find { p =>  A(perm(p),i) != ModRationalGmpExt.zero}).getOrElse(throw new MatrixSingularException()))
+						  val tmp = perm(i)
+                      perm(i) = perm(pivotRow)
+                      perm(pivotRow) = tmp
+		
+            if(pivotRow == 1){
+																			//val pivot = A(perm(i), i)                 
+											for (j <- i + 1 until A.rows) {
+												val coeff = A(perm(j),i)                  
+														A(perm(j), ::) -= A(perm(i), ::) * coeff
+														X(perm(j), ::) -= X(perm(i), ::) * coeff       
+											}
+
+								}else{
+               val pivot = A(perm(i), i)                 
+                for (j <- i + 1 until A.rows) {
+                  val coeff = A(perm(j),i) / pivot                 
+                      A(perm(j), ::) -= A(perm(i), ::) * coeff
+                      X(perm(j), ::) -= X(perm(i), ::) * coeff       
+                }
+                }
+          }
+						//val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)  
+						val X1= new DenseMatrix[ModRationalGmpExt](X.rows, X.cols)
+								for (i <- A.rows - 1 to (0, -1)) {
+									X1(i, ::) := X(perm(i), ::)
+											for (j <- i + 1 until A.rows) {               
+											
+												X1(i, ::) -= X1(j, ::) * A(perm(i), j)
+											}
+									
+									X1(i, ::) /= A(perm(i), i)
 								}
+
                 
-					}
-  //val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)  
-      val X1= new DenseMatrix[ModRationalGmpExt](X.rows, X.cols)
-      for (i <- A.rows - 1 to (0, -1)) {
-        X1(i, ::) := X(perm(i), ::)
-            for (j <- i + 1 until A.rows) {               
-              //X(perm(i), ::) -= X(perm(j), ::) * A(perm(i), j)
-              X1(i, ::) -= X1(j, ::) * A(perm(i), j)
-            }
-          //X(perm(i), ::) /= A(perm(i), i)
-         X1(i, ::) /= A(perm(i), i)
-      }
-   
-      
-        /*  val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)
-			for( z<- 0 until A.rows){
-				X1(z,::) +=X(perm(z),::)
 					
-			} */
-      
+					//val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)  
+					
+
+		
+        
       
       X:=X1.copy
      
@@ -584,7 +602,42 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalGmpExt], ModRationalGmpExt, DenseVe
 
       
 		}
-    
+    */
+
+
+		def LUSolve(X: DenseMatrix[ModRationalGmpExt], A: DenseMatrix[ModRationalGmpExt]) = {
+			var perm = (0 until A.rows).toArray
+					for (i <- 0 until A.rows-1) {
+						val optPivot = (i until A.rows) find { p => A(perm(p),i) != ModRationalGmpExt.zero}
+						val pivotRow = optPivot.getOrElse(throw new MatrixSingularException())
+								val tmp = perm(i)
+								perm(i) = perm(pivotRow)
+								perm(pivotRow) = tmp
+								val pivot = A(perm(i), i)
+								for (j <- i + 1 until A.rows) {
+									val coeff = A(perm(j),i) / pivot
+											A(perm(j), ::) -= A(perm(i), ::) * coeff
+											X(perm(j), ::) -= X(perm(i), ::) * coeff
+								}
+					}
+			//val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)
+			val X1= new DenseMatrix[ModRationalGmpExt](X.rows, X.cols)
+					for (i <- A.rows - 1 to (0, -1)) {
+						X1(i, ::) := X(perm(i), ::)
+								for (j <- i + 1 until A.rows) {
+									//X(perm(i), ::) -= X(perm(j), ::) * A(perm(i), j)
+									X1(i, ::) -= X1(j, ::) * A(perm(i), j)
+								}
+						//X(perm(i), ::) /= A(perm(i), i)
+						X1(i, ::) /= A(perm(i), i)
+					}
+			/* val X1= DenseMatrix.zeros[ModRationalGmpExt](X.rows, X.cols)
+for( z<- 0 until A.rows){
+X1(z,::) +=X(perm(z),::)
+} */
+			X:=X1.copy
+		}
+
   
      
 		override def apply(A: DenseMatrix[ModRationalGmpExt], V: DenseMatrix[ModRationalGmpExt]): DenseMatrix[ModRationalGmpExt] = {

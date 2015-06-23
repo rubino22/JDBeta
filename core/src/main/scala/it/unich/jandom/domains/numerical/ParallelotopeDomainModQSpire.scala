@@ -22,16 +22,17 @@ import scala.util.Try
 import it.unich.jandom.domains.CachedTopBottom
 import it.unich.jandom.utils.breeze.countNonZero
 import breeze.linalg._
-import it.unich.jandom.utils.numberext.ModRationalGmpExt
-import it.unich.jandom.utils.numberext.ModRationalGmpExt
+import it.unich.jandom.utils.numberext.ModRationalSpireExt
+import it.unich.jandom.utils.numberext.ModRationalSpireExt
 import it.unich.jandom.ui.Parameter
+import it.unich.jandom.utils.numberext.ModRationalSpireExt
 
 /**
  * This is the base class for rational extensions
  *
  * @author Marco Rubino <marco.rubino@unich.it>
  */
-class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRound: Boolean) extends NumericalDomain {
+class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boolean) extends NumericalDomain {
 
   import breeze.linalg.operators._
   /**
@@ -47,12 +48,12 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
 
   def apply(low: DenseVector[Double], A: DenseMatrix[Double], high: DenseVector[Double]): Property = {
    
-    val low1= DenseVector.zeros[ModRationalGmpExt](low.length)
-    val A1= DenseMatrix.zeros[ModRationalGmpExt](A.rows, A.cols)
-    val high1= DenseVector.zeros[ModRationalGmpExt](high.length)
-    for(i <- 0 until low.length){ low1(i)=ModRationalGmpExt(low(i))}    
-    for(i <- 0 until high.length){ high1(i)=ModRationalGmpExt(high(i))}    
-    for(i <- 0 until A.rows){ for(j <- 0 until A.cols){A1(i,j)=ModRationalGmpExt(A(i,j))}}
+    val low1= DenseVector.zeros[ModRationalSpireExt](low.length)
+    val A1= DenseMatrix.zeros[ModRationalSpireExt](A.rows, A.cols)
+    val high1= DenseVector.zeros[ModRationalSpireExt](high.length)
+    for(i <- 0 until low.length){ low1(i)=ModRationalSpireExt(low(i))}    
+    for(i <- 0 until high.length){ high1(i)=ModRationalSpireExt(high(i))}    
+    for(i <- 0 until A.rows){ for(j <- 0 until A.cols){A1(i,j)=ModRationalSpireExt(A(i,j))}}
     
     val isEmpty = (0 until low1.size) exists { i => low1(i) > high1(i) }
     val isEmpty2 = (0 until low1.size) exists { i => low1(i).isInfinite && low1(i) == high1(i) }
@@ -67,9 +68,9 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
    */
   def top(n: Int): Property = {
   
-    val low = DenseVector.fill(n)(ModRationalGmpExt.NegativeInfinity)
-    val high = DenseVector.fill(n)(ModRationalGmpExt.PositiveInfinity)
-    val A = DenseMatrix.eye[ModRationalGmpExt](n)
+    val low = DenseVector.fill(n)(ModRationalSpireExt.NegativeInfinity)
+    val high = DenseVector.fill(n)(ModRationalSpireExt.PositiveInfinity)
+    val A = DenseMatrix.eye[ModRationalSpireExt](n)
     
     new Property(false, low, A, high)
     /* The full parallelotope of dimension 0 is not empty! */
@@ -81,9 +82,9 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
    * @throws $ILLEGAL
    */
   def bottom(n: Int): Property = {
-    val low = DenseVector.fill(n)(ModRationalGmpExt.one)
-    val high = DenseVector.fill(n)(ModRationalGmpExt.zero)
-    val A = DenseMatrix.eye[ModRationalGmpExt](n)  
+    val low = DenseVector.fill(n)(ModRationalSpireExt.one)
+    val high = DenseVector.fill(n)(ModRationalSpireExt.zero)
+    val A = DenseMatrix.eye[ModRationalSpireExt](n)  
    
     new Property(true, low, A, high)
   }
@@ -97,14 +98,14 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
    * @note `low`, `high` and `lf` should be of the same length.
    * @return the least and greatest value of `lf` in the box determine by `low` and `high`.
    */
-  private def extremalsInBox(lf: DenseVector[ModRationalGmpExt], low: DenseVector[ModRationalGmpExt], high: DenseVector[ModRationalGmpExt]): (ModRationalGmpExt, ModRationalGmpExt) = {
-    var minc = ModRationalGmpExt.zero
-    var maxc = ModRationalGmpExt.zero
+  private def extremalsInBox(lf: DenseVector[ModRationalSpireExt], low: DenseVector[ModRationalSpireExt], high: DenseVector[ModRationalSpireExt]): (ModRationalSpireExt, ModRationalSpireExt) = {
+    var minc = ModRationalSpireExt.zero
+    var maxc = ModRationalSpireExt.zero
     for (i <- 0 until lf.length)
-      if (lf(i) > ModRationalGmpExt.zero) {
+      if (lf(i) > ModRationalSpireExt.zero) {
         minc += lf(i) * low(i)
         maxc += lf(i) * high(i)
-      } else if (lf(i) < ModRationalGmpExt.zero) {
+      } else if (lf(i) < ModRationalSpireExt.zero) {
         minc += lf(i) * high(i)
         maxc += lf(i) * low(i)
       }
@@ -117,15 +118,15 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
    * @param m a sequence of vectors, all of the same length.
    * @return a sequence of positions in m.
    */
-  private def pivoting(m: IndexedSeq[DenseVector[ModRationalGmpExt]]): Seq[Int] = {
+  private def pivoting(m: IndexedSeq[DenseVector[ModRationalSpireExt]]): Seq[Int] = {
     val dimension = m(0).length
     var indexes = Seq[Int]()
-    var pivots = Seq[(DenseVector[ModRationalGmpExt], Int)]()
+    var pivots = Seq[(DenseVector[ModRationalSpireExt], Int)]()
     var i = 0
     while (indexes.length < dimension) {
       val row = m(i).copy
       for (p <- pivots) row -= p._1 * row(p._2)
-      val col = (0 until row.length) find (row(_) != ModRationalGmpExt.zero)
+      val col = (0 until row.length) find (row(_) != ModRationalSpireExt.zero)
       col match {
         case Some(col) =>
           row /= row(col)
@@ -153,9 +154,9 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
    */
   final class Property(
     val isEmpty: Boolean,
-    val low: DenseVector[ModRationalGmpExt],
-    val A: DenseMatrix[ModRationalGmpExt],
-    val high: DenseVector[ModRationalGmpExt])
+    val low: DenseVector[ModRationalSpireExt],
+    val A: DenseMatrix[ModRationalSpireExt],
+    val high: DenseVector[ModRationalSpireExt])
     extends NumericalProperty[Property] {
     
    //require(low.length == A.rows)
@@ -166,13 +167,13 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
   // println(A)
   // println("--------");
    
-   // require(Try(A \ DenseMatrix.eye[ModRationalGmpExt](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")     
+   // require(Try(A \ DenseMatrix.eye[ModRationalSpireExt](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")     
    // require(normalized)
     //println("Low "+low+" --High "+high);
    
-    type Domain = ParallelotopeDomainModRationalGmpExt
+    type Domain = ParallelotopeDomainModQSpire
 
-    def domain = ParallelotopeDomainModRationalGmpExt.this
+    def domain = ParallelotopeDomainModQSpire.this
  
     private def normalized: Boolean = {
      // println("low"+low+" high"+high);
@@ -196,8 +197,8 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
       val newlow = low.copy
       val newhigh = high.copy
       for (i <- 0 to dimension - 1) {
-        if (thatRotated.low(i) < low(i)) newlow(i) = ModRationalGmpExt.NegativeInfinity
-        if (thatRotated.high(i) > high(i)) newhigh(i) = ModRationalGmpExt.PositiveInfinity
+        if (thatRotated.low(i) < low(i)) newlow(i) = ModRationalSpireExt.NegativeInfinity
+        if (thatRotated.high(i) > high(i)) newhigh(i) = ModRationalSpireExt.PositiveInfinity
       }
   
       new Property(false, newlow, A, newhigh)
@@ -248,14 +249,14 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
        * reals and `p` is an integer, whose intended meaning is the constraint `m <= ax <= M`
        * with a given priority `p`.
        */
-      type PrioritizedConstraint = (DenseVector[ModRationalGmpExt], ModRationalGmpExt, ModRationalGmpExt, Int)
+      type PrioritizedConstraint = (DenseVector[ModRationalSpireExt], ModRationalSpireExt, ModRationalSpireExt, Int)
 
       /*
        * Given a linear form `v`, compute a prioritized constraint `(v,m,M,p)`. The parameter `ownedBy`
        * tells whether the line form under consideration is one of the "native" forms of this (1) or
        * that (2). This is used to refine priorities.
        */
-      def priority(v: DenseVector[ModRationalGmpExt], ownedBy: Int = 0): PrioritizedConstraint = {
+      def priority(v: DenseVector[ModRationalSpireExt], ownedBy: Int = 0): PrioritizedConstraint = {
         val y1 = A.t \ v
         val (l1, u1) = domain.extremalsInBox(y1, low, high)
         val y2 = that.A.t \ v
@@ -294,11 +295,11 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
        * @return `None` if `v1` and `v2` are not linearly dependent, otherwise it is
        * `Some(k)` such that `v1 = k * v2`.
        */
-      def linearDep(v1: DenseVector[ModRationalGmpExt], v2: DenseVector[ModRationalGmpExt]): Option[ModRationalGmpExt] = {
+      def linearDep(v1: DenseVector[ModRationalSpireExt], v2: DenseVector[ModRationalSpireExt]): Option[ModRationalSpireExt] = {
         var i: Int = 0
-        while (i < dimension && (v1(i) == ModRationalGmpExt.zero || v2(i) == ModRationalGmpExt.zero)) i += 1
+        while (i < dimension && (v1(i) == ModRationalSpireExt.zero || v2(i) == ModRationalSpireExt.zero)) i += 1
         if (i == dimension)
-          Some(ModRationalGmpExt.one)
+          Some(ModRationalSpireExt.one)
         else if (v1 / v1(i) == v2 / v2(i))
           Some(v1(i) / v2(i))
         else
@@ -316,11 +317,11 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
        * @return None if `v1` and `v2` do not form an inversion, otherwise it is `Some(v)` where `v` is the
        * new linear form computed by the inversion procedure.
        */
-      def newConstraint(vi: DenseVector[ModRationalGmpExt], vj: DenseVector[ModRationalGmpExt], min1i: ModRationalGmpExt, min2i: ModRationalGmpExt, min1j: ModRationalGmpExt, min2j: ModRationalGmpExt): Option[DenseVector[ModRationalGmpExt]] = {
+      def newConstraint(vi: DenseVector[ModRationalSpireExt], vj: DenseVector[ModRationalSpireExt], min1i: ModRationalSpireExt, min2i: ModRationalSpireExt, min1j: ModRationalSpireExt, min2j: ModRationalSpireExt): Option[DenseVector[ModRationalSpireExt]] = {
         if (min1i.isInfinity || min2i.isInfinity || min1j.isInfinity || min2j.isInfinity) return None
         if (linearDep(vi, vj).isEmpty) return None
-        val (deltai, deltaj) = if (min2j - min1j >= ModRationalGmpExt.zero) (min1i - min2i, min2j - min1j) else (min2i - min1i, min1j - min2j)
-        if (deltai * deltaj > ModRationalGmpExt.zero)
+        val (deltai, deltaj) = if (min2j - min1j >= ModRationalSpireExt.zero) (min1i - min2i, min2j - min1j) else (min2i - min1i, min1j - min2j)
+        if (deltai * deltaj > ModRationalSpireExt.zero)
           Some(-vi * deltaj - vj * deltai)
         else
           None
@@ -408,7 +409,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
       else  new Property(false, result.low, result.A, result.high) //this is to normalize
     }
 
-    def linearAssignment(n: Int, lf: LinearForm[Double]): Property = linearAssignment_m(n, LinearForm(lf.coeffs map { ModRationalGmpExt(_) }: _*) )
+    def linearAssignment(n: Int, lf: LinearForm[Double]): Property = linearAssignment_m(n, LinearForm(lf.coeffs map { ModRationalSpireExt(_) }: _*) )
 
     /**
      * @inheritdoc
@@ -416,21 +417,21 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
      * @todo @inheritdoc
      * @throws $ILLEGAL
      */
-    def linearAssignment_m(n: Int, lf: LinearForm[ModRationalGmpExt]): Property = {
+    def linearAssignment_m(n: Int, lf: LinearForm[ModRationalSpireExt]): Property = {
       require(n <= dimension && lf.dimension <= dimension)
       val tcoeff = lf.homcoeffs
       val known = lf.known
       if (isEmpty) return this
-      val coeff = tcoeff.padTo(dimension, ModRationalGmpExt.zero).toArray
+      val coeff = tcoeff.padTo(dimension, ModRationalSpireExt.zero).toArray
     
-      if (coeff(n) != ModRationalGmpExt.zero) {
+      if (coeff(n) != ModRationalSpireExt.zero) {
         // invertible assignment
         val increment = A(::, n) :* known / coeff(n)
         val newlow = low :+ increment
         val newhigh = high :+ increment
         // in the past we could use SparseVector instead of DenseVector, but this does not work anymore
-        val ei = DenseVector.zeros[ModRationalGmpExt](dimension)
-        ei(n) = ModRationalGmpExt.one
+        val ei = DenseVector.zeros[ModRationalSpireExt](dimension)
+        ei(n) = ModRationalSpireExt.one
         val newA = A :- (A(::, n) * (DenseVector(coeff) - ei).t) / coeff(n)
      
         new Property(false, newlow, newA, newhigh)
@@ -438,11 +439,11 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
         // non-invertible assignment
         val newP = nonDeterministicAssignment(n)
         val Aprime = newP.A.copy
-        val j = ((0 to Aprime.rows - 1) find { Aprime(_, n) != ModRationalGmpExt.zero }).get
-        for (s <- 0 to dimension - 1 if Aprime(s, n) != ModRationalGmpExt.zero && s != j)
+        val j = ((0 to Aprime.rows - 1) find { Aprime(_, n) != ModRationalSpireExt.zero }).get
+        for (s <- 0 to dimension - 1 if Aprime(s, n) != ModRationalSpireExt.zero && s != j)
           Aprime(s, ::) :-= Aprime(j, ::) * Aprime(s, n) / Aprime(j, n)
-        val ei = DenseVector.zeros[ModRationalGmpExt](dimension)
-        ei(n) = ModRationalGmpExt.one
+        val ei = DenseVector.zeros[ModRationalSpireExt](dimension)
+        ei(n) = ModRationalSpireExt.one
         Aprime(j, ::) := (ei :- DenseVector(coeff)).t
         val newlow = newP.low.copy
         val newhigh = newP.high.copy
@@ -453,13 +454,13 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
       }
     }
 
-    private def dotprod(x: DenseVector[ModRationalGmpExt], y: DenseVector[ModRationalGmpExt], remove: Int = -1): ModRationalGmpExt = {
-      var sum= ModRationalGmpExt.zero
-      for (i <- 0 until x.length if i != remove if x(i) != ModRationalGmpExt.zero) sum = sum + x(i) * y(i)
+    private def dotprod(x: DenseVector[ModRationalSpireExt], y: DenseVector[ModRationalSpireExt], remove: Int = -1): ModRationalSpireExt = {
+      var sum= ModRationalSpireExt.zero
+      for (i <- 0 until x.length if i != remove if x(i) != ModRationalSpireExt.zero) sum = sum + x(i) * y(i)
       sum
     }
 
-    def linearInequality(lf: LinearForm[Double]): Property = linearInequality_m( LinearForm(lf.coeffs map { ModRationalGmpExt(_) }: _*) )
+    def linearInequality(lf: LinearForm[Double]): Property = linearInequality_m( LinearForm(lf.coeffs map { ModRationalSpireExt(_) }: _*) )
 
     /**
      * @inheritdoc
@@ -467,21 +468,21 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
      * @todo @inheritdoc
      * @throws ILLEGAL
      */
-    def linearInequality_m(lf: LinearForm[ModRationalGmpExt]): Property = {
+    def linearInequality_m(lf: LinearForm[ModRationalSpireExt]): Property = {
       require(lf.dimension <= dimension)
       if (isEmpty) return this
       if (dimension == 0)
-        if (lf.known > ModRationalGmpExt.zero)
+        if (lf.known > ModRationalSpireExt.zero)
           return bottom
         else
           return this
 
       val known = lf.known
-      val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, ModRationalGmpExt.zero): _*)
+      val coeffs = DenseVector(lf.homcoeffs.padTo(dimension, ModRationalSpireExt.zero): _*)
      //println("entro")
       val coeffsTransformed = A.t \ coeffs
      //print("-> "+A.t +" DIVISO"+ coeffs+" =="+coeffsTransformed)
-      val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != ModRationalGmpExt.zero && low(i).isInfinity && high(i).isInfinity }
+      val removeCandidates = (0 until dimension) find { i => coeffsTransformed(i) != ModRationalSpireExt.zero && low(i).isInfinity && high(i).isInfinity }
       // println("removeCandidates "+removeCandidates);
       removeCandidates match {
         case None => {
@@ -490,21 +491,21 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
           val (minc, maxc) = domain.extremalsInBox(coeffsTransformed, newlow, newhigh)
           if (minc > -known) return bottom
 
-          val lfArgmin = coeffsTransformed mapPairs { case (i, c) => if (c > ModRationalGmpExt.zero) low(i) else high(i) }
+          val lfArgmin = coeffsTransformed mapPairs { case (i, c) => if (c > ModRationalSpireExt.zero) low(i) else high(i) }
 
-          val infinities = (0 until dimension) filter { i => lfArgmin(i).isInfinity && coeffsTransformed(i) != ModRationalGmpExt.zero }         
+          val infinities = (0 until dimension) filter { i => lfArgmin(i).isInfinity && coeffsTransformed(i) != ModRationalSpireExt.zero }         
      // println("infinite"+infinities.size);
           infinities.size match {
             case 0 => 
               for (i <- 0 until dimension) {
                // println("PRE"+high);
-                if (coeffsTransformed(i) > ModRationalGmpExt.zero) newhigh(i) = high(i) min (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
-                else if (coeffsTransformed(i) < ModRationalGmpExt.zero) newlow(i) = low(i) max (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
+                if (coeffsTransformed(i) > ModRationalSpireExt.zero) newhigh(i) = high(i) min (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
+                else if (coeffsTransformed(i) < ModRationalSpireExt.zero) newlow(i) = low(i) max (lfArgmin(i) + (-known - minc) / coeffsTransformed(i))
               // println("POST high"+newhigh);
                 }
             case 1 => { 
               val posinf = infinities.head
-              if (coeffsTransformed(posinf) < ModRationalGmpExt.zero)
+              if (coeffsTransformed(posinf) < ModRationalSpireExt.zero)
                 newlow(posinf) = low(posinf) max ((-dotprod(coeffsTransformed, lfArgmin, posinf) - known) / coeffsTransformed(posinf))
               else
                 newhigh(posinf) = high(posinf) min ((-dotprod(coeffsTransformed, lfArgmin, posinf) - known) / coeffsTransformed(posinf))
@@ -528,23 +529,23 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
       }
     }
 
-    def linearDisequality(lf: LinearForm[Double]): Property = linearDisequality_m( LinearForm(lf.coeffs map { ModRationalGmpExt(_) }: _*) )
+    def linearDisequality(lf: LinearForm[Double]): Property = linearDisequality_m( LinearForm(lf.coeffs map { ModRationalSpireExt(_) }: _*) )
     /**
      * @inheritdoc
      * @note @inheritdoc
      * @throws $ILLEGAL
      */
-    def linearDisequality_m(lf: LinearForm[ModRationalGmpExt]): Property = {     
+    def linearDisequality_m(lf: LinearForm[ModRationalSpireExt]): Property = {     
       val tcoeff = lf.homcoeffs     
       val known = lf.known   
        
-      if (tcoeff.forall(_ == ModRationalGmpExt.zero))
-        if (known == ModRationalGmpExt.zero) bottom else this
+      if (tcoeff.forall(_ == ModRationalSpireExt.zero))
+        if (known == ModRationalSpireExt.zero) bottom else this
       else {       
        
         val row = (0 until dimension).find { (r) =>
           val v1 = A(r, ::).t
-          val v2 = DenseVector[ModRationalGmpExt](tcoeff: _*)
+          val v2 = DenseVector[ModRationalSpireExt](tcoeff: _*)
           v1 == v2
         }
         row match {
@@ -564,7 +565,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
       require(n <= dimension)
       if (isEmpty) return this
 
-      val unsortedCandidates = (0 until dimension) filter { i => A(i, n) != ModRationalGmpExt.zero && (!low(i).isNegInfinity || !high(i).isPosInfinity) }
+      val unsortedCandidates = (0 until dimension) filter { i => A(i, n) != ModRationalSpireExt.zero && (!low(i).isNegInfinity || !high(i).isPosInfinity) }
       if (unsortedCandidates.isEmpty) return this
 
       // We prever to use as a pivot a simple constraint. Therefore, we order constraints by the number of
@@ -590,26 +591,26 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
         val value2 = A(i, n)
         val rowi = A(i, ::)
         newA(i, ::) := rowPivot * value2 - rowi * value1
-        val (minPivot, maxPivot) = if (A(i, n) < ModRationalGmpExt.zero) (high(pivot), low(pivot)) else (low(pivot), high(pivot))
-        val (mini, maxi) = if (-A(pivot, n) < ModRationalGmpExt.zero) (high(i), low(i)) else (low(i), high(i))
+        val (minPivot, maxPivot) = if (A(i, n) < ModRationalSpireExt.zero) (high(pivot), low(pivot)) else (low(pivot), high(pivot))
+        val (mini, maxi) = if (-A(pivot, n) < ModRationalSpireExt.zero) (high(i), low(i)) else (low(i), high(i))
         newlow(i) = minPivot * value2 - mini * value1
         newhigh(i) = maxPivot * value2 - maxi * value1
       }
-      newlow(pivot) = ModRationalGmpExt.NegativeInfinity
-      newhigh(pivot) = ModRationalGmpExt.PositiveInfinity
+      newlow(pivot) = ModRationalSpireExt.NegativeInfinity
+      newhigh(pivot) = ModRationalSpireExt.PositiveInfinity
       
       new Property(false, newlow, newA, newhigh)
     }
 
     def addVariable(): Property = {
       if (isEmpty)
-        ParallelotopeDomainModRationalGmpExt.this.bottom(A.rows + 1)
+        ParallelotopeDomainModQSpire.this.bottom(A.rows + 1)
       else {
-        val e = DenseMatrix.zeros[ModRationalGmpExt](dimension + 1, 1)
-        e(dimension, 0) = ModRationalGmpExt.one
-        val newA = DenseMatrix.horzcat(DenseMatrix.vertcat(A, DenseMatrix.zeros[ModRationalGmpExt](1, dimension)), e)
-        val newlow = DenseVector.vertcat(low, DenseVector(ModRationalGmpExt.NegativeInfinity))
-        val newhigh = DenseVector.vertcat(high, DenseVector(ModRationalGmpExt.PositiveInfinity))
+        val e = DenseMatrix.zeros[ModRationalSpireExt](dimension + 1, 1)
+        e(dimension, 0) = ModRationalSpireExt.one
+        val newA = DenseMatrix.horzcat(DenseMatrix.vertcat(A, DenseMatrix.zeros[ModRationalSpireExt](1, dimension)), e)
+        val newlow = DenseVector.vertcat(low, DenseVector(ModRationalSpireExt.NegativeInfinity))
+        val newhigh = DenseVector.vertcat(high, DenseVector(ModRationalSpireExt.PositiveInfinity))
         
         new Property(false, newlow, newA, newhigh)
       }
@@ -633,16 +634,16 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
      * @throws $ILLEGAL
      */
     def delVariable(n: Int): Property = {
-      def rowToSeq(M: DenseMatrix[ModRationalGmpExt], i: Int, n: Int): Seq[ModRationalGmpExt] =
+      def rowToSeq(M: DenseMatrix[ModRationalSpireExt], i: Int, n: Int): Seq[ModRationalSpireExt] =
         for (j <- 0 until A.rows; if j != n) yield M(i, j)
 
       if (isEmpty)
-        ParallelotopeDomainModRationalGmpExt.this.bottom(A.rows - 1)
+        ParallelotopeDomainModQSpire.this.bottom(A.rows - 1)
       else {
         val forgot = this.nonDeterministicAssignment(n)
-        val set1 = for (i <- 0 until dimension; if !forgot.low(i).isInfinity; if forgot.A(i, n) == ModRationalGmpExt.zero) yield -LinearForm(-forgot.low(i) +: rowToSeq(forgot.A, i, n): _*)
-        val set2 = for (i <- 0 until dimension; if !forgot.high(i).isInfinity; if forgot.A(i, n) == ModRationalGmpExt.zero) yield LinearForm(-forgot.high(i) +: rowToSeq(forgot.A, i, n): _*)
-        (set1 ++ set2).foldLeft(ParallelotopeDomainModRationalGmpExt.this.top(A.rows - 1)) { (p, lf) => p.linearInequality_m(lf) }
+        val set1 = for (i <- 0 until dimension; if !forgot.low(i).isInfinity; if forgot.A(i, n) == ModRationalSpireExt.zero) yield -LinearForm(-forgot.low(i) +: rowToSeq(forgot.A, i, n): _*)
+        val set2 = for (i <- 0 until dimension; if !forgot.high(i).isInfinity; if forgot.A(i, n) == ModRationalSpireExt.zero) yield LinearForm(-forgot.high(i) +: rowToSeq(forgot.A, i, n): _*)
+        (set1 ++ set2).foldLeft(ParallelotopeDomainModQSpire.this.top(A.rows - 1)) { (p, lf) => p.linearInequality_m(lf) }
       }
     }
 
@@ -663,7 +664,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
     }
 
      def linearEvaluation(lf: LinearForm[Double]): (Double, Double) = {
-       val le =linearEvaluation_m(LinearForm(lf.coeffs map { ModRationalGmpExt(_) }: _*))
+       val le =linearEvaluation_m(LinearForm(lf.coeffs map { ModRationalSpireExt(_) }: _*))
        (le._1.toDouble, le._2.toDouble)
      }
 
@@ -673,15 +674,15 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
      * @return a tuple with two components: the first component is the least value, the second component is the greatest value
      * of the linear form over the box.
      */
-    def linearEvaluation_m(lf: LinearForm[ModRationalGmpExt]): (ModRationalGmpExt, ModRationalGmpExt) = {
+    def linearEvaluation_m(lf: LinearForm[ModRationalSpireExt]): (ModRationalSpireExt, ModRationalSpireExt) = {
 
       val tcoeff = lf.homcoeffs
-      if (isEmpty && tcoeff.exists { _ != ModRationalGmpExt.zero })
-        (ModRationalGmpExt.PositiveInfinity,ModRationalGmpExt.NegativeInfinity)
+      if (isEmpty && tcoeff.exists { _ != ModRationalSpireExt.zero })
+        (ModRationalSpireExt.PositiveInfinity,ModRationalSpireExt.NegativeInfinity)
       else if (dimension == 0)
         (lf.known, lf.known)
       else {
-        val coeff = tcoeff.padTo(dimension, ModRationalGmpExt.zero).toArray
+        val coeff = tcoeff.padTo(dimension, ModRationalSpireExt.zero).toArray
         val vec = DenseVector(coeff)
         val newvec = A.t \ vec
         val newlf = lf.known +: newvec.valuesIterator.toSeq
@@ -690,11 +691,11 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
       }
     }
 
-    def minimize_m(lf: LinearForm[ModRationalGmpExt]) = linearEvaluation_m(lf)._1
+    def minimize_m(lf: LinearForm[ModRationalSpireExt]) = linearEvaluation_m(lf)._1
 
-    def maximize_m(lf: LinearForm[ModRationalGmpExt]) = linearEvaluation_m(lf)._2
+    def maximize_m(lf: LinearForm[ModRationalSpireExt]) = linearEvaluation_m(lf)._2
 
-    def frequency_m(lf: LinearForm[ModRationalGmpExt]) = {
+    def frequency_m(lf: LinearForm[ModRationalSpireExt]) = {
       val (min, max) = linearEvaluation_m(lf)
       if (min == max) Some(min) else None
     }
@@ -715,9 +716,9 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
 
     def isBottom = isEmpty
 
-    def bottom = ParallelotopeDomainModRationalGmpExt.this.bottom(dimension)
+    def bottom = ParallelotopeDomainModQSpire.this.bottom(dimension)
 
-    def top = ParallelotopeDomainModRationalGmpExt.this.top(dimension)
+    def top = ParallelotopeDomainModQSpire.this.top(dimension)
 
     def tryCompareTo[B >: Property](that: B)(implicit arg0: (B) => PartiallyOrdered[B]): Option[Int] = that match {
       case that: Property =>
@@ -741,23 +742,23 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
      * @note `Aprime` should be an invertible matrix of the same dimension as `this`.
      * @throws IllegalArgumentException if `Aprime` is not square or has not the correct dimension.
      */
-    def rotate(Aprime: DenseMatrix[ModRationalGmpExt]): Property = {
+    def rotate(Aprime: DenseMatrix[ModRationalSpireExt]): Property = {
       require(dimension == Aprime.rows && dimension == Aprime.cols)
       if (isEmpty) return this;
      
      
-      val B = Aprime * (A \ DenseMatrix.eye[ModRationalGmpExt](dimension))
+      val B = Aprime * (A \ DenseMatrix.eye[ModRationalSpireExt](dimension))
       
    
-      val newlow = DenseVector.zeros[ModRationalGmpExt](dimension)
-      val newhigh = DenseVector.zeros[ModRationalGmpExt](dimension)
+      val newlow = DenseVector.zeros[ModRationalSpireExt](dimension)
+      val newhigh = DenseVector.zeros[ModRationalSpireExt](dimension)
       
         B.foreachPair {
         case ((i, j), v) =>
-          if (v > ModRationalGmpExt.zero) {
+          if (v > ModRationalSpireExt.zero) {
             newlow(i) += v * low(j)
             newhigh(i) += v * high(j)
-          } else if (v < ModRationalGmpExt.zero) {
+          } else if (v < ModRationalSpireExt.zero) {
             newhigh(i) += v * low(j)
             newlow(i) += v * high(j)
           }
@@ -788,23 +789,23 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
       /**
        * Returns a string representation of the linear form `lf`.
        */
-      def lfToString(lf: DenseVector[ModRationalGmpExt]): String = {
+      def lfToString(lf: DenseVector[ModRationalSpireExt]): String = {
         var first = true
         var s = ""
         
         for (index <- 0 until dimension) {
           val coeff = lf(index)
           val term = coeff match {
-            case ModRationalGmpExt.zero => ""
-            case ModRationalGmpExt.one => vars(index)
+            case ModRationalSpireExt.zero => ""
+            case ModRationalSpireExt.one => vars(index)
             //case -1 => "-" + vars(index)
             case c => c.toString + "*" + vars(index)
           }
-          if (coeff != ModRationalGmpExt.zero) {
-            if (first || coeff < ModRationalGmpExt.zero) {
+          if (coeff != ModRationalSpireExt.zero) {
+            if (first || coeff < ModRationalSpireExt.zero) {
               s += term
               first = false
-            } else if (coeff != ModRationalGmpExt.zero)
+            } else if (coeff != ModRationalSpireExt.zero)
               s += "+" + term
           }
         }
@@ -818,6 +819,7 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
         val eqns = for (i <- 0 until dimension) yield {
           if (low(i) < high(i)){
             if(overRound){
+              
             low(i).rounds("Down") + " <= " + lfToString(A.t(::, i)) + " <= " + high(i).rounds("Up")
           }else{
             low(i) + " <= " + lfToString(A.t(::, i)) + " <= " + high(i)
@@ -839,11 +841,11 @@ class ParallelotopeDomainModRationalGmpExt private (favorAxes: Boolean, overRoun
 /**
  * Companion class for the parallelotope domain
  */
-object ParallelotopeDomainModRationalGmpExt {
-  private lazy val standard = new ParallelotopeDomainModRationalGmpExt(false, true) with CachedTopBottom
-  private lazy val favoring = new ParallelotopeDomainModRationalGmpExt(true, true) with CachedTopBottom
-  private lazy val standard1 = new ParallelotopeDomainModRationalGmpExt(false, false) with CachedTopBottom
-  private lazy val favoring1 = new ParallelotopeDomainModRationalGmpExt(true, false) with CachedTopBottom
+object ParallelotopeDomainModQSpire {
+  private lazy val standard = new ParallelotopeDomainModQSpire(false, true) with CachedTopBottom
+  private lazy val favoring = new ParallelotopeDomainModQSpire(true, true) with CachedTopBottom
+  private lazy val standard1 = new ParallelotopeDomainModQSpire(false, false) with CachedTopBottom
+  private lazy val favoring1 = new ParallelotopeDomainModQSpire(true, false) with CachedTopBottom
 
   /**
    * Returns an abstract domain for parallelotopes.

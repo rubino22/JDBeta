@@ -9,7 +9,8 @@ libraryDependencies ++= Seq(
   // "org.scalanlp" %% "breeze-natives" % "0.9",
   "org.rogach" %% "scallop" % "0.9.5",
   "org.scala-lang.modules" %% "scala-swing" % "1.0.1",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3", 
+   "org.spire-math" % "spire_2.11" % "0.10.1",
   // ASM is included in the Soot Jar
   "soot" % "soot" % "2.5.0+git2" from "https://ssebuild.cased.de/nightly/soot/lib/soot-trunk.jar"
 )

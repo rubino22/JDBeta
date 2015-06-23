@@ -39,6 +39,8 @@ object NumericalDomains extends ParameterEnumeration[NumericalDomain] {
     ,ParameterValue(SumIntParallelotopeDomain(), "BoxDouble + Parallelotope", "Sum of boxes and parallelotopes.")
     ,ParameterValue(ParallelotopeDomainModRationalGmpExt(), "ParallelotopeModQ", "Library GMP Wrapper ")
     ,ParameterValue(ParallelotopeDomainModRationalGmpExt(overRound=false), "ParallelotopeModQ without Round", "Library GMP Wrapper ")
+    ,ParameterValue(ParallelotopeDomainModQSpire(), "Parallelotope Spire", "Library Spire ")
+    ,ParameterValue(ParallelotopeDomainModQSpire(overRound=false), "Parallelotope Spire without Round", "Library Spire ")
     
   )
   val default = values.last
