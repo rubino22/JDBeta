@@ -40,6 +40,11 @@ import it.unich.jandom.domains.numerical.ppl.PPLDomainSuiteOctagon
 import parma_polyhedra_library.Octagonal_Shape_double
 import it.unich.jandom.narrowings.DefaultNarrowing
 import it.unich.jandom.domains.numerical.ParallelotopeDomainModQSpire
+import it.unich.jandom.domains.numerical.ProductDomain
+import it.unich.jandom.domains.numerical.ProductDomainSuite
+import it.unich.jandom.domains.numerical.BoxSpireDomain
+import parma_polyhedra_library.Double_Box
+
 
 /**
  * Example program using ''Jandom'' to analyze the Alice benchmarks and
@@ -76,7 +81,7 @@ object JandomModQBench extends App {
     fr.close()
     val program = parsed.get
     println("WIDENINGS: " + program.locations.filter(program.isJoinNode).map(_.name).mkString(", "))
-
+/*
     val params1 = new targets.Parameters[LTS] { val domain = PPLDomain[Octagonal_Shape_double]()}
     params1.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopes
     params1.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3) // needed for parallelotopes
@@ -90,8 +95,6 @@ object JandomModQBench extends App {
     val tann1 = System.currentTimeMillis - t1
     
   
-    
-    //val params2 = new targets.Parameters[LTS] { val domain = PPLDomain[C_Polyhedron]()}
     val params2 = new targets.Parameters[LTS] { val domain = PPLDomain[C_Polyhedron]()}
     params2.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopes
     params2.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3)
@@ -105,7 +108,7 @@ object JandomModQBench extends App {
     val tann2 = System.currentTimeMillis - t2
     
 
-
+/*
     val params3 = new targets.Parameters[LTS] { val domain = ParallelotopeDomain() }
     params3.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopes
     params3.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3)
@@ -117,9 +120,9 @@ object JandomModQBench extends App {
     val t3 = System.currentTimeMillis
     val ann3 = program.analyze(params3)
     val tann3 = System.currentTimeMillis - t3
-
+*/
     
-    val params4 = new targets.Parameters[LTS] { val domain = ParallelotopeDomainModRationalGmpExt(overRound=false) }
+    val params4 = new targets.Parameters[LTS] { val domain = ParallelotopeDomainModQSpire(1,overRound=false) }
     params4.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
     params4.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3)
     //params4.debugWriter = new java.io.PrintWriter(System.out)
@@ -130,59 +133,90 @@ object JandomModQBench extends App {
     val t4 = System.currentTimeMillis
     val ann4 = program.analyze(params4)
     val tann4 = System.currentTimeMillis - t4
-    
-    val params5 = new targets.Parameters[LTS] { val domain = BoxDoubleDomain() }
-    params5.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
-    params5.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3)
+    */
+    val params5 = new targets.Parameters[LTS] { val domain = new ProductDomain(BoxSpireDomain(),ParallelotopeDomainModQSpire(-1,overRound=false)) }
+    params5.wideningFactory = DelayedWideningFactory(DefaultWidening, 100) // needed for parallelotopesModQExt
+    params5.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 100)
     //params4.debugWriter = new java.io.PrintWriter(System.out)
 
     program.analyze(params5) // warmup JVM
     //params4.debugWriter.flush()
 
     val t5 = System.currentTimeMillis
-    val ann5 = program.analyze(params5)
+    val ProDom = program.analyze(params5)
     val tann5 = System.currentTimeMillis - t5
    
    
-    val params6 = new targets.Parameters[LTS] { val domain = ParallelotopeDomainModQSpire(overRound=false) }
+    val params6 = new targets.Parameters[LTS] { val domain =  PPLDomain[Double_Box]() }
     params6.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
     params6.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3)
     //params4.debugWriter = new java.io.PrintWriter(System.out)
-
+    
     program.analyze(params6) // warmup JVM
     //params4.debugWriter.flush()
 
     val t6 = System.currentTimeMillis
-    val ann6 = program.analyze(params6)
+    val Oct = program.analyze(params6)
     val tann6 = System.currentTimeMillis - t6
+    /*
+     val params6Bis = new targets.Parameters[LTS] { val domain = ParallelotopeDomainModQSpire(favorAxes=false,overRound=false) }
+    params6Bis.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
+    params6Bis.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3)
+    //params4.debugWriter = new java.io.PrintWriter(System.out)
+
+    program.analyze(params6Bis) // warmup JVM
+    //params4.debugWriter.flush()
+
+    val t6Bis = System.currentTimeMillis
+    val ann6Bis = program.analyze(params6Bis)
+    val tann6Bis = System.currentTimeMillis - t6Bis
+   
+    val params7 = new targets.Parameters[LTS] { val domain = new ProductDomain(BoxDoubleDomain(),ParallelotopeDomainModQSpire(-1,overRound=false)) }
+    params7.wideningFactory = DelayedWideningFactory(DefaultWidening, 3) // needed for parallelotopesModQExt
+    params7.narrowingFactory = DelayedNarrowingFactory(DefaultNarrowing, 3)
+    //params4.debugWriter = new java.io.PrintWriter(System.out)
+
+    program.analyze(params7) // warmup JVM
+    //params4.debugWriter.flush()
+
+    val t7 = System.currentTimeMillis
+    val ann7 = program.analyze(params7)
+    val tann7 = System.currentTimeMillis - t7
     
     
     val cann1 = ann1 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
     val cann2 = ann2 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
-    val cann3 = ann3 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
-    val cann4 = ann4 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+   // val cann3 = ann3 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+   // val cann4 = ann4 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
     val cann5 = ann5 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
     val cann6 = ann6 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
-
-   totalTimeGMP=totalTimeGMP + tann4;
-   totalTimeSpire=totalTimeSpire + tann6;
-    println(s"Times:  ${tann4} vs  ${tann6}")
-    print("PPL Octagon_Shape_double: ")
+   // val cann6Bis = ann6Bis mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+    val cann7 = ann7 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+ */
+    val cprdoDom = ProDom mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+    val coct = Oct mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+    
+   //totalTimeGMP=totalTimeGMP + tann4;
+   //totalTimeSpire=totalTimeSpire + tann6;
+   // println(s"Times:  ${tann4} vs  ${tann6}")
+   /* print("PPL Octagon_Shape_double: ")
     println(mkString(program, cann1))
     print("PPL C_Polyhedron: ")
-    println(mkString(program, cann2))
-    //print("PTope: ")
-    //println(mkString(program, cann3))
+    println(mkString(program, cann2)) */
+   /* print("PTope: ")
+    println(mkString(program, cann3))
     print("PTopeExt: ")
-    println(mkString(program, cann4))
-    print("PTopeExt2: ")
-    println(mkString(program, cann6))
+    println(mkString(program, cann4))*/
     print("Box: ")
-    println(mkString(program, cann5))
+    println(mkString(program, Oct))
+    //print("Box: ")
+   // println(mkString(program, cann5))
+    print("ProdDomain: ")
+    println(mkString(program, cprdoDom))
       
 
     // SOSTITUIRE cann1 con cann3 se si vuole il confronto con i Parallelotopi.
-    // val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc) intersection cann4(loc))) }
+    // val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc) intersection cann5(loc))) }
 
     //comparing sum with box
     //val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann1(loc))) }
@@ -191,11 +225,11 @@ object JandomModQBench extends App {
     //val comp = cann2 map { case (loc, v) => (loc -> v.tryCompareTo(cann3(loc))) }
     
     //comparing sum with parallelotope
-    val comp = cann6 map { case (loc, v) => (loc -> v.tryCompareTo(cann4(loc))) }
+    val comp = coct map { case (loc, v) => (loc -> v.tryCompareTo(cprdoDom(loc))) }
 
     println("COUNT EQUALS: " + comp.count(_._2 == Some(0)))
-    println("COUNT BETTER PPL: " + comp.count(_._2 == Some(-1)))
-    println("COUNT BETTER OTHER: " + comp.count(_._2 == Some(1)))
+    println("COUNT BETTER OCT: " + comp.count(_._2 == Some(-1)))
+    println("COUNT BETTER PRODOM: " + comp.count(_._2 == Some(1)))
     println("COUNT UNCOMPARABLES: " + comp.count(_._2 == None))
 
     totalEquals += comp.count(_._2 == Some(0))
@@ -206,9 +240,10 @@ object JandomModQBench extends App {
     //println("DIFFERENT BEHAVIOURS: " + model)
     //println(s"Times:  ${tann1} vs  ${tann2}")
     //println("WIDENINGS: " + program.locations.filter(program.isJoinNode).map(_.name).mkString(", "))
+ 
     println("EQUALS: " + program.locations.filter(comp(_) == Some(0)).map(_.name).mkString(", "))
-    println("BETTER PPL: " + program.locations.filter(comp(_) == Some(-1)).map(_.name).mkString(", "))
-    println("BETTER OTHER: " + program.locations.filter(comp(_) == Some(1)).map(_.name).mkString(", "))
+    println("BETTER OCT: " + program.locations.filter(comp(_) == Some(-1)).map(_.name).mkString(", "))
+    println("BETTER PRODOM: " + program.locations.filter(comp(_) == Some(1)).map(_.name).mkString(", "))
     println("UNCOMPARABLES: " + program.locations.filter(comp(_) == None).map(_.name).mkString(", "))
   }
 
@@ -237,10 +272,10 @@ object JandomModQBench extends App {
   println(s"Number of programs: ${totalPrograms}")
   println(s"""Bad programs: ${badPrograms.mkString("\n")}""")
   println(s"Total equals: ${totalEquals}")
-  println(s"Total best ppl: ${totalBestPPL}")
-  println(s"Total best other: ${totalBestOther}")
+  println(s"Total best oct: ${totalBestPPL}")
+  println(s"Total best proDom: ${totalBestOther}")
   println(s"Total uncomparables: ${totalUncomparable}")
-  print(s"Total time GMP: ${totalTimeGMP}  ")
+ /* print(s"Total time GMP: ${totalTimeGMP}  ")
   print(s"  vs    Total time Spire: ${totalTimeSpire}")
-
+*/
 }

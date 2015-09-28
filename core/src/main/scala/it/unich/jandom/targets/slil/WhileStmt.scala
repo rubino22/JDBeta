@@ -21,6 +21,7 @@ package it.unich.jandom.targets.slil
 import it.unich.jandom.domains.numerical.NumericalProperty
 import it.unich.jandom.targets.Annotation
 import it.unich.jandom.targets.NumericCondition
+import org.mockito.internal.matchers.Null
 
 /**
  * The class for a while statement. Each while statement has a corresponding program
@@ -45,6 +46,13 @@ case class WhileStmt(condition: NumericCondition, body: SLILStmt) extends SLILSt
     import it.unich.jandom.targets.WideningScope._
     import it.unich.jandom.targets.NarrowingStrategy._
 
+    /**
+     * ONLY FOR TEST
+     */
+    if (lastInvariant != null && input.getClass != lastInvariant.getClass) {
+      lastInvariant= null
+      lastBodyResult = null
+    }
     // Increase nesting level since we are entering a loop
     params.nestingLevel += 1
 
@@ -53,14 +61,16 @@ case class WhileStmt(condition: NumericCondition, body: SLILStmt) extends SLILSt
     val narrowing = params.narrowingFactory((this, 1))
 
     // Determines initial values for the analysis, depending on the calling phase
+ 
     var (bodyResult, invariant) =
-      if (lastBodyResult != null && phase != AscendingRestart)
+      if (lastBodyResult != null && phase != AscendingRestart  )
         (lastBodyResult.asInstanceOf[params.Property], lastInvariant.asInstanceOf[params.Property])
       else
         (input.bottom, input.bottom)
 
     // Keep the current phase in the variable currentPhase, and initialize
     // with the input parameter
+    
     var currentPhase = phase
 
     // Declare a variable for the loop
@@ -133,6 +143,7 @@ case class WhileStmt(condition: NumericCondition, body: SLILStmt) extends SLILSt
         invariant = newinvariant
 
         bodyResult = body.analyzeStmt(params)(condition.analyze(invariant), newphase, ann)
+        
         newinvariant = invariant narrowing (input union bodyResult)
 
         // Debug
@@ -146,6 +157,7 @@ case class WhileStmt(condition: NumericCondition, body: SLILStmt) extends SLILSt
     // Save current values for later iterations of the loop
     lastInvariant = invariant
     lastBodyResult = bodyResult
+    
 
     // Annotate results
     ann((this, 1)) = invariant

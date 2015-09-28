@@ -83,8 +83,9 @@ class PPLProperty[PPLNativeProperty <: AnyRef](val domain: PPLDomain[PPLNativePr
   }
 
   def linearAssignment(n: Int, lf: LinearForm[Double]): PPLProperty[PPLNativeProperty] = {
+    
     val (le, den) = PPLUtils.toPPLLinearExpression(lf)
-    val newpplobject = domain.copyConstructor(pplobject)
+    var newpplobject = domain.copyConstructor(pplobject)
     domain.affine_image(newpplobject, new Variable(n), le, den)
     new PPLProperty(domain, newpplobject)
   }

@@ -193,3 +193,5 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
     }
   }
 }
+
+

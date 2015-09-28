@@ -60,6 +60,7 @@ abstract class SLILStmt extends SLILTarget {
   def analyze(params: Parameters): Annotation[ProgramPoint,params.Property] = {
     val ann = getAnnotation[params.Property]
     val input = params.domain.top(numvars)
+    
     analyzeStmt(params)(input, AscendingRestart, ann)
     return ann
   }

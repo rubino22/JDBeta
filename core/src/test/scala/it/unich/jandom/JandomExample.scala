@@ -36,7 +36,7 @@ import it.unich.jandom.widenings.DefaultWidening
 object JandomExample extends App {
 
   {
-    val source = scala.io.Source.fromFile("examples/WideningPaper/nested.R").getLines.mkString("\n")
+    val source = scala.io.Source.fromFile("examples/Random/xyline.R").getLines.mkString("\n")
     val parsed = parsers.RandomParser().parseProgram(source)
     if (parsed.successful) {
       val program = parsed.get

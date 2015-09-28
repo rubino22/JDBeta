@@ -26,13 +26,19 @@ import it.unich.jandom.utils.numberext.ModRationalSpireExt
 import it.unich.jandom.utils.numberext.ModRationalSpireExt
 import it.unich.jandom.ui.Parameter
 import it.unich.jandom.utils.numberext.ModRationalSpireExt
+import scala.reflect.io.File
+import scala.collection.mutable.ArrayBuffer
+import it.unich.jandom.utils.numberext.ModRationalGmpExt.ModRationalGmpExtZero
+import it.unich.jandom.utils.numberext.ModRationalSpireExt.ModRationalSpireExtZero
+
+
 
 /**
  * This is the base class for rational extensions
  *
  * @author Marco Rubino <marco.rubino@unich.it>
  */
-class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boolean) extends NumericalDomain {
+class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boolean) extends NumericalDomain {
 
   import breeze.linalg.operators._
   /**
@@ -120,10 +126,13 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
    */
   private def pivoting(m: IndexedSeq[DenseVector[ModRationalSpireExt]]): Seq[Int] = {
     val dimension = m(0).length
+   
     var indexes = Seq[Int]()
     var pivots = Seq[(DenseVector[ModRationalSpireExt], Int)]()
     var i = 0
     while (indexes.length < dimension) {
+ 
+    
       val row = m(i).copy
       for (p <- pivots) row -= p._1 * row(p._2)
       val col = (0 until row.length) find (row(_) != ModRationalSpireExt.zero)
@@ -139,6 +148,9 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
     indexes
   }
 
+  
+  
+  
   /**
    * This is an element of the parallelotope domain.
    *
@@ -246,7 +258,7 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
 
       /*
        * A PrioritizedConstraint is a tuple `(a, m, M, p)` where `a` is a vector, `m` and `M` are
-       * reals and `p` is an integer, whose intended meaning is the constraint `m <= ax <= M`
+       * rational and `p` is an integer, whose intended meaning is the constraint `m <= ax <= M`
        * with a given priority `p`.
        */
       type PrioritizedConstraint = (DenseVector[ModRationalSpireExt], ModRationalSpireExt, ModRationalSpireExt, Int)
@@ -261,12 +273,15 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
         val (l1, u1) = domain.extremalsInBox(y1, low, high)
         val y2 = that.A.t \ v
         val (l2, u2) = domain.extremalsInBox(y2, that.low, that.high)
+       
         val p =
-          if (l1 == l2 && l2 == u1 && u1 == u2)
+          if (l1 == l2 && l2 == u1 && u1 == u2) ///se appartiene a tutti e due è necessario
             0
-          else if (favorAxes && countNonZero(v) == 1)
-              25 //  previous value for test: 10
-          else if (!l1.isInfinity && !l2.isInfinity && !u1.isInfinity && !u2.isInfinity) {
+          else if (favorAxes == 1 && countNonZero(v) == 1) // se è un asse si prende
+           25
+           else if (favorAxes == -1 && countNonZero(v) == 1) // se è un asse si cerca a non prendere
+           101
+          else if (!l1.isInfinity && !l2.isInfinity && !u1.isInfinity && !u2.isInfinity) {// diversi criteri di priorità
             if (l1 == l2 && u1 == u2)
               10
             else if (l1 >= l2 && u1 <= u2)
@@ -287,10 +302,11 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
           else if (!u1.isInfinity && !u2.isInfinity)
             60
           else 100
+         
         (v, l1 min l2, u1 max u2, p)
       }
 
-      /**
+      /*
        * Determines whether `v1` and `v2` are linearly dependent.
        * @return `None` if `v1` and `v2` are not linearly dependent, otherwise it is
        * `Some(k)` such that `v1 = k * v2`.
@@ -327,7 +343,7 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
           None
       }
 
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
 
       // special cases
       if (isEmpty) return that
@@ -342,13 +358,13 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
       val min1 = DenseVector.vertcat(this.low, thisRotated.low)
       val min2 = DenseVector.vertcat(thatRotated.low, that.low)
       val max1 = DenseVector.vertcat(this.high, thisRotated.high)
-      val max2 = DenseVector.vertcat(thatRotated.high, that.high)
-
+      val max2 = DenseVector.vertcat(thatRotated.high, that.high)      
       for (i <- 0 to dimension - 1) Q += priority(this.A.t(::, i), 1)
       for (i <- 0 to dimension - 1) Q += priority(that.A.t(::, i), 2)
       for (i <- 0 to dimension - 1; j <- i + 1 to dimension - 1) {
         val v1 = bulk.t(::, i)
         val v2 = bulk.t(::, j)
+        
         val nc1 = newConstraint(v1, v2, min1(i), min2(i), min1(j), min2(j))
         if (nc1.isDefined) Q += priority(nc1.get)
         val nc2 = newConstraint(v1, -v2, min1(i), min2(i), -max1(j), -max2(j))
@@ -357,10 +373,17 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
         if (nc3.isDefined) Q += priority(nc3.get)
         val nc4 = newConstraint(-v1, v2, -max1(i), -max2(i), min1(j), min2(j))
         if (nc4.isDefined) Q += priority(nc4.get)
+       
       }
+      
       val Qsorted = Q.sortBy[Int](_._4)
+      
+      
       val pvt = domain.pivoting(Qsorted map (_._1))
+      
 
+    
+      
       val newA = DenseMatrix(pvt map (Qsorted(_)._1.toArray): _*)
       val newlow = DenseVector(pvt map (Qsorted(_)._2): _*)
       val newhigh = DenseVector(pvt map (Qsorted(_)._3): _*)
@@ -842,11 +865,11 @@ class ParallelotopeDomainModQSpire private (favorAxes: Boolean, overRound: Boole
  * Companion class for the parallelotope domain
  */
 object ParallelotopeDomainModQSpire {
-  private lazy val standard = new ParallelotopeDomainModQSpire(false, true) with CachedTopBottom
+  /*private lazy val standard = new ParallelotopeDomainModQSpire(false, true) with CachedTopBottom
   private lazy val favoring = new ParallelotopeDomainModQSpire(true, true) with CachedTopBottom
   private lazy val standard1 = new ParallelotopeDomainModQSpire(false, false) with CachedTopBottom
   private lazy val favoring1 = new ParallelotopeDomainModQSpire(true, false) with CachedTopBottom
-
+  */
   /**
    * Returns an abstract domain for parallelotopes.
    * @param favorAxes determines whether the heuristics built into the domain should try to keep the variability
@@ -854,5 +877,7 @@ object ParallelotopeDomainModQSpire {
    * combinator.
    * if overRound is false the result the values ​​of the results are presented in the form of rational n/d
    */
-  def apply(favorAxes: Boolean = false, overRound: Boolean = true) =if(overRound){ if (favorAxes) favoring else standard} else { if (favorAxes) favoring1 else standard1}  
+  //def apply(favorAxes: Boolean = false, overRound: Boolean = true) =if(overRound){ if (favorAxes) favoring else standard} else { if (favorAxes) favoring1 else standard1}  
+  //favorAxes = 0 == False, 1 == True, -1 == Removed
+  def apply(favorAxes: Integer = 0, overRound: Boolean = true) =if(overRound){ new ParallelotopeDomainModQSpire(favorAxes, true)  with CachedTopBottom} else { new ParallelotopeDomainModQSpire(favorAxes, false) with CachedTopBottom}
 }

@@ -45,6 +45,7 @@ private[jandom] object PPLUtils {
       for (i <- 0 until lf.dimension) {
         le = le.sum((new Linear_Expression_Variable(new Variable(i)).times(new Coefficient(newcoeffs(i + 1)))))
       }
+     
       val result = (le, new Coefficient(denumerator.toBigIntExact.get.bigInteger))
       lf.toPPL = result
       result
