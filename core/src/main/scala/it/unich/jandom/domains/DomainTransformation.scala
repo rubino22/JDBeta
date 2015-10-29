@@ -90,15 +90,17 @@ implicit object ParallelotopeModQToBoxDouble extends DomainTransformation[Parall
 implicit object ParallelotopeModQToBoxSpire extends DomainTransformation[ParallelotopeDomainModQSpire, BoxSpireDomain] {
     import breeze.linalg.{ DenseMatrix, DenseVector }
     def apply(src: ParallelotopeDomainModQSpire, dst: BoxSpireDomain): src.Property => dst.Property  = { (x) =>
+     //println("trasformo");
       val newPar = x.rotate(DenseMatrix.eye(x.dimension))
       if (newPar.isEmpty)
         dst.bottom(newPar.dimension)
       else{
-        val low1= DenseVector.zeros[ModRationalSpireExt](newPar.low.length)
+        /*val low1= DenseVector.zeros[ModRationalSpireExt](newPar.low.length)
         val high1= DenseVector.zeros[ModRationalSpireExt](newPar.high.length)
          for(i <- 0 until newPar.low.length){ low1(i)=newPar.low(i)}  
-        for(i <- 0 until newPar.high.length){ high1(i)=newPar.high(i)}
-        dst(low1.toArray, high1.toArray)
+        for(i <- 0 until newPar.high.length){ high1(i)=newPar.high(i)}*/
+       //println("PToB "+newPar.low+" "+newPar.high);
+        dst(newPar.low.toArray, newPar.high.toArray)
       }
     }
   }
@@ -114,18 +116,23 @@ implicit object ParallelotopeModQToBoxSpire extends DomainTransformation[Paralle
    implicit object BoxDoubleToParallelotopeModQ extends DomainTransformation[BoxDoubleDomain, ParallelotopeDomainModQSpire]{
     import breeze.linalg.{ DenseMatrix, DenseVector }
     def apply(src: BoxDoubleDomain, dst: ParallelotopeDomainModQSpire): src.Property => dst.Property = { (x) =>
-      dst(DenseVector(x.low), DenseMatrix.eye(x.dimension), DenseVector(x.high))
+       val low1= new Array [ModRationalSpireExt](x.low.length)    
+    val high1= new Array [ModRationalSpireExt](x.high.length)
+     for(i <- 0 until x.low.length){ low1(i)=ModRationalSpireExt(x.low(i))}    
+   for(i <- 0 until x.high.length){ high1(i)=ModRationalSpireExt(x.high(i))}  
+      dst(DenseVector(low1), DenseMatrix.eye(x.dimension), DenseVector(high1))
     }
   }
    
      implicit object BoxSpireToParallelotopeModQ extends DomainTransformation[BoxSpireDomain, ParallelotopeDomainModQSpire]{
     import breeze.linalg.{ DenseMatrix, DenseVector }
     def apply(src: BoxSpireDomain, dst: ParallelotopeDomainModQSpire): src.Property => dst.Property = { (x) =>{
-      val low1= new Array [Double](x.low.length)    
-    val high1= new Array [Double](x.high.length)
-     for(i <- 0 until x.low.length){ low1(i)=x.low(i).toDouble}    
-    for(i <- 0 until x.high.length){ high1(i)=x.high(i).toDouble}  
-      dst(DenseVector(low1), DenseMatrix.eye(x.dimension), DenseVector(high1))
+      //val low1= new Array [Double](x.low.length)    
+   // val high1= new Array [Double](x.high.length)
+     //for(i <- 0 until x.low.length){ low1(i)=x.low(i).toDouble}    
+   // for(i <- 0 until x.high.length){ high1(i)=x.high(i).toDouble} 
+     // println("B to P"+DenseVector(x.low)+" "+DenseVector(x.high));
+      dst(DenseVector(x.low), DenseMatrix.eye(x.dimension), DenseVector(x.high))
     }
     }
   }
@@ -170,6 +177,11 @@ implicit object ParallelotopeModQToBoxSpire extends DomainTransformation[Paralle
   implicit object BoxDoubleToBoxDouble extends DomainTransformation[BoxDoubleDomain, BoxDoubleDomain] {
     def apply(src: BoxDoubleDomain, dst: BoxDoubleDomain): src.Property => dst.Property = { (x) => dst(x.low, x.high) }
   }
+  
+   implicit object BoxSpireToBoxSpire extends DomainTransformation[BoxSpireDomain, BoxSpireDomain] {
+    def apply(src: BoxSpireDomain, dst: BoxSpireDomain): src.Property => dst.Property = { (x) => {dst(x.low, x.high)} }
+  }
+
 
   object NumericalPropertyToBoxDouble extends DomainTransformation[NumericalDomain, BoxDoubleDomain] {
     def apply(src: NumericalDomain, dst: BoxDoubleDomain): src.Property => dst.Property = { (x) =>  dst.top(x.dimension) }

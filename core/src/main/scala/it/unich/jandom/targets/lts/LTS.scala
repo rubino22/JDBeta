@@ -108,7 +108,7 @@ case class LTS(val locations: IndexedSeq[Location], val transitions: Seq[Transit
     def apply(env: Assignment) = {
       x: Unknown =>
          val incomingValues = for ( t <- x.incoming ) yield t.analyze(env(t.start))
-         incomingValues reduce { _ union _ }
+        incomingValues reduce { _ union _ }
     }
     val unknowns = locations
     def infl(x: Unknown) = x.outgoing.map( _.end )
@@ -174,22 +174,37 @@ case class LTS(val locations: IndexedSeq[Location], val transitions: Seq[Transit
       locations.foreach { loc => ann(loc) = current(loc.id) }
 
     } else {
+      
       val current = initial.toBuffer
       val workList = collection.mutable.Queue[Int]()
-
+        
       params.log("Beginning ascending chain\n")
       workList ++= 0 until numlocs
+     println("inizio ascesa "+workList.length);
       while (!workList.isEmpty) {
         val locid = workList.dequeue()
         val loc = locations(locid)
+      //  println("Curr: "+current(locid));
         val w = widenings(locid)
+       
         val propnew = for (t <- loc.incoming) yield t.analyze(current(t.start.id))
-        val unionednew = propnew.fold(empty)(_ union _)
+       // println("Curr: "+current(locid)+" Prop "+propnew);
+         val unionednew = propnew.fold(empty)(_ union _)
+       println(" Unionednew "+unionednew);
+        //       print("**** "+current(locid) +" unione "+unionednew);
         params.log(s"Node: ${loc.name} Oldvalue: ${current(loc.id).mkString(env.variables)} Newinput: ${unionednew.mkString(env.variables)}")
+         
+       val un=current(locid) union unionednew
+      /*println("non monotono "+(current(locid)>unionednew)); println(" unione non monotona "+(un > unionednew));*/
         val newvalue = if (w.isEmpty) unionednew else w.get(current(locid), unionednew)
+      println(" Wideni "+newvalue);
+        
+        println(current(locid)>=newvalue);
+      //println("**** "+unionednew); 
         params.log(s" Newvalue: ${newvalue.mkString(env.variables)}\n")
-        if (newvalue > current(locid)) {
-          current(locid) = newvalue
+       
+       if (newvalue > current(locid)) { //println(current(locid)+ " CAMBIO CON "+newvalue);
+          current(locid) = newvalue 
           for (t <- loc.outgoing) { if (!workList.contains(t.end.id)) workList.enqueue(t.end.id) }
         }
       }
@@ -197,22 +212,37 @@ case class LTS(val locations: IndexedSeq[Location], val transitions: Seq[Transit
       params.log("Beginning descending chain\n")
 
       workList ++= 0 until numlocs
+      println("inizio discesa"+workList.length);
       while (!workList.isEmpty) {
+         
         val locid = workList.dequeue()
+        // println("Corrente "+current(locid));
         val loc = locations(locid)
         val n = narrowings(locid)
+       
         val propnew = for (t <- loc.incoming) yield t.analyze(current(t.start.id))
+    
         val unionednew = propnew.fold(empty)(_ union _) union initial(locid)
+       
         params.log(s"Node: ${loc.name} Oldvalue: ${current(loc.id).mkString(env.variables)} Newinput: ${unionednew.mkString(env.variables)}")
-        val newvalue = if (n.isEmpty) unionednew else n.get(current(locid), unionednew)
+      //  println("Corrente "+current(locid)+ "inter "+(current(locid) intersection (unionednew)));
+        val newvalue = if (n.isEmpty) current(locid) intersection (unionednew) else n.get(current(locid), current(locid) intersection (unionednew))
+        
+       // val newvalue = if (n.isEmpty) unionednew else n.get(current(locid), unionednew)
+        
         params.log(s" Newvalue: ${newvalue.mkString(env.variables)}\n")
-        if (newvalue < current(locid)) {
-          current(locid) = newvalue
+        val v=newvalue < current(locid)
+       // print(n.isEmpty+"   ");println("narrowing "+newvalue)
+       // println(newvalue.dimension+" "+newvalue)
+        
+        if (newvalue < current(locid)) {//println( current(locid) + " CAMBIO con "+newvalue);
+          current(locid) = newvalue 
           for (t <- loc.outgoing) { if (!workList.contains(t.end.id)) workList.enqueue(t.end.id) }
         }
       }
       locations.foreach { loc => ann(loc) = current(loc.id) }
     }
+   
     ann
   }
 

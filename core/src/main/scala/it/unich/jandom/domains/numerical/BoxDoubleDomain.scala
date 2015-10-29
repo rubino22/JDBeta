@@ -188,6 +188,7 @@ class BoxDoubleDomain(val overReals: Boolean) extends NumericalDomain {
      */
     def narrowing(that: Property) = {
       require(dimension == that.dimension)
+      
       if (that.isEmpty) {
         that
       } else {

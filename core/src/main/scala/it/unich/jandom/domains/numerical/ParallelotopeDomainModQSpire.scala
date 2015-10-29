@@ -52,19 +52,19 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
    * square or if `A` has not the same size of `low`.
    */
 
-  def apply(low: DenseVector[Double], A: DenseMatrix[Double], high: DenseVector[Double]): Property = {
+  def apply(low: DenseVector[ModRationalSpireExt], A: DenseMatrix[ModRationalSpireExt], high: DenseVector[ModRationalSpireExt]): Property = {
    
-    val low1= DenseVector.zeros[ModRationalSpireExt](low.length)
+   /* val low1= DenseVector.zeros[ModRationalSpireExt](low.length)
     val A1= DenseMatrix.zeros[ModRationalSpireExt](A.rows, A.cols)
     val high1= DenseVector.zeros[ModRationalSpireExt](high.length)
     for(i <- 0 until low.length){ low1(i)=ModRationalSpireExt(low(i))}    
     for(i <- 0 until high.length){ high1(i)=ModRationalSpireExt(high(i))}    
     for(i <- 0 until A.rows){ for(j <- 0 until A.cols){A1(i,j)=ModRationalSpireExt(A(i,j))}}
-    
-    val isEmpty = (0 until low1.size) exists { i => low1(i) > high1(i) }
-    val isEmpty2 = (0 until low1.size) exists { i => low1(i).isInfinite && low1(i) == high1(i) }
- 
-    new Property(isEmpty || isEmpty2, low1, A1, high1)
+    */
+    val isEmpty = (0 until low.size) exists { i => low(i) > high(i) }
+    val isEmpty2 = (0 until low.size) exists { i => low(i).isInfinite && low(i) == high(i) }
+    //println("Prop "+low+" "+high);
+    new Property(isEmpty || isEmpty2, low, A, high)
   }
 
   /**
@@ -77,7 +77,7 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
     val low = DenseVector.fill(n)(ModRationalSpireExt.NegativeInfinity)
     val high = DenseVector.fill(n)(ModRationalSpireExt.PositiveInfinity)
     val A = DenseMatrix.eye[ModRationalSpireExt](n)
-    
+   
     new Property(false, low, A, high)
     /* The full parallelotope of dimension 0 is not empty! */
   }
@@ -128,6 +128,7 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
     val dimension = m(0).length
    
     var indexes = Seq[Int]()
+   
     var pivots = Seq[(DenseVector[ModRationalSpireExt], Int)]()
     var i = 0
     while (indexes.length < dimension) {
@@ -142,7 +143,7 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
           pivots = pivots :+ Tuple2(row, col)
           indexes = indexes :+ i
         case None =>
-      }
+          }
       i += 1
     }
     indexes
@@ -203,17 +204,25 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
      * @throws $ILLEGAL
      */
     def widening(that: Property): Property = {
+      //println("widening"+A+"");
       require(dimension == that.dimension)
       if (isEmpty) return that
-      val thatRotated = that.rotate(A)
-      val newlow = low.copy
-      val newhigh = high.copy
+      //val thatRotated = that.rotate(A)
+      val thisRotated = this.rotate(that.A) 
+      /*val newlow = low.copy
+      val newhigh = high.copy*/
+      val newlow = thisRotated.low.copy
+      val newhigh = thisRotated.high.copy
       for (i <- 0 to dimension - 1) {
-        if (thatRotated.low(i) < low(i)) newlow(i) = ModRationalSpireExt.NegativeInfinity
-        if (thatRotated.high(i) > high(i)) newhigh(i) = ModRationalSpireExt.PositiveInfinity
+        /*if (thatRotated.low(i) < low(i)) newlow(i) = ModRationalSpireExt.NegativeInfinity
+        if (thatRotated.high(i) > high(i)) newhigh(i) = ModRationalSpireExt.PositiveInfinity*/
+        if (thisRotated.low(i) > that.low(i)) newlow(i) = ModRationalSpireExt.NegativeInfinity
+        if (thisRotated.high(i) < that.high(i)) newhigh(i) = ModRationalSpireExt.PositiveInfinity
       }
-  
-      new Property(false, newlow, A, newhigh)
+     
+      println("that="+that+" this="+this+" ruotato "+(thisRotated) + "OL "+thisRotated.low+" OH "+thisRotated.high);//println(" NL "+newlow+" NH "+newhigh);
+     
+      new Property(false, newlow, that.A, newhigh)
     }
 
     /**
@@ -254,6 +263,8 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
      * @note @inheritdoc
      * @throws $ILLEGAL
      */
+    
+    
     def union(that: Property): Property = {
 
       /*
@@ -273,13 +284,13 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
         val (l1, u1) = domain.extremalsInBox(y1, low, high)
         val y2 = that.A.t \ v
         val (l2, u2) = domain.extremalsInBox(y2, that.low, that.high)
-       
+        
         val p =
           if (l1 == l2 && l2 == u1 && u1 == u2) ///se appartiene a tutti e due è necessario
             0
           else if (favorAxes == 1 && countNonZero(v) == 1) // se è un asse si prende
            25
-           else if (favorAxes == -1 && countNonZero(v) == 1) // se è un asse si cerca a non prendere
+           else if (favorAxes == -1 && countNonZero(v) == 1) // se è un asse si cerca di non prendere
            101
           else if (!l1.isInfinity && !l2.isInfinity && !u1.isInfinity && !u2.isInfinity) {// diversi criteri di priorità
             if (l1 == l2 && u1 == u2)
@@ -301,7 +312,8 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
             60
           else if (!u1.isInfinity && !u2.isInfinity)
             60
-          else 100
+          else//{ val rnd = new scala.util.Random; val range = 61 to 100; var r=range(rnd.nextInt(range length)); r}
+            100
          
         (v, l1 min l2, u1 max u2, p)
       }
@@ -377,17 +389,21 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
       }
       
       val Qsorted = Q.sortBy[Int](_._4)
-      
-      
+      val t :IndexedSeq[DenseVector[ModRationalSpireExt]]= Qsorted map (_._1)
+      val repo=Q.filter(_._4>=101) 
+       val nocento=Q.filter(_._4<100) 
+    
+    //println(Qsorted)
       val pvt = domain.pivoting(Qsorted map (_._1))
       
 
     
       
       val newA = DenseMatrix(pvt map (Qsorted(_)._1.toArray): _*)
+      
       val newlow = DenseVector(pvt map (Qsorted(_)._2): _*)
       val newhigh = DenseVector(pvt map (Qsorted(_)._3): _*)
-     
+     //println(" low "+newlow+" high "+high);
       new Property(false, newlow, newA, newhigh)
     }
 
@@ -420,9 +436,11 @@ class ParallelotopeDomainModQSpire private (favorAxes: Integer, overRound: Boole
      */
     def intersectionWeak(that: Property): Property = {
       require(dimension == that.dimension)
+     // println("intersezione");
       if (isEmpty) return this
       if (that.isEmpty) return that
       val result = that.rotate(A)
+    
       for (i <- 0 to dimension - 1) {
         result.low(i) = result.low(i) max low(i)
         result.high(i) = result.high(i) min high(i)

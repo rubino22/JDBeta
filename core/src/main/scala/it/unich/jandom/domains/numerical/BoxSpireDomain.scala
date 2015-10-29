@@ -179,7 +179,7 @@ class BoxSpireDomain(val overReals: Boolean) extends NumericalDomain {
     def widening(that: Property) = {
       require(dimension == that.dimension)
       val newlow = (low, that.low).zipped.map((l1, l2) => if (l1 == ModRationalSpireExt.PositiveInfinity) l2 else if (l1 <= l2) l1 else ModRationalSpireExt.NegativeInfinity)
-      val newhigh = (high, that.high).zipped.map((l1, l2) => if (l1 == ModRationalSpireExt.NegativeInfinity) l2 else if (l1 >= l2) l1 else ModRationalSpireExt.PositiveInfinity)
+      val newhigh = (high, that.high).zipped.map((l1, l2) => if (l1 == ModRationalSpireExt.NegativeInfinity) l2 else if (l1 >= l2) l1 else ModRationalSpireExt.PositiveInfinity)       
       new Property(newlow, newhigh, isEmpty && that.isEmpty)
     }
 
@@ -190,6 +190,7 @@ class BoxSpireDomain(val overReals: Boolean) extends NumericalDomain {
      */
     def narrowing(that: Property) = {
       require(dimension == that.dimension)
+     
       if (that.isEmpty) {
         that
       } else {

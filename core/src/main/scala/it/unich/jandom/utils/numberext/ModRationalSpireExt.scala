@@ -689,7 +689,8 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalSpireExt], ModRationalSpireExt, Den
 
 
 		def LUSolve(X: DenseMatrix[ModRationalSpireExt], A: DenseMatrix[ModRationalSpireExt]) = {
-			var perm = (0 until A.rows).toArray
+			
+      var perm = (0 until A.rows).toArray
 					for (i <- 0 until A.rows-1) {
 						val optPivot = (i until A.rows) find { p => A(perm(p),i) != ModRationalSpireExt.zero}
 						val pivotRow = optPivot.getOrElse(throw new MatrixSingularException())
@@ -718,6 +719,7 @@ new OpMulMatrix.Impl2[DenseVector[ModRationalSpireExt], ModRationalSpireExt, Den
 for( z<- 0 until A.rows){
 X1(z,::) +=X(perm(z),::)
 } */
+      
 			X:=X1.copy
 		}
 
@@ -736,7 +738,8 @@ X1(z,::) +=X(perm(z),::)
         val Y = DenseMatrix.zeros[ModRationalSpireExt](A.rows, A.cols) 
 						X := V
 						Y := A
-             // LUSolve2(X, Y)  
+             // LUSolve2(X, Y)
+         
 					LUSolve(X, Y)              
 						X
            

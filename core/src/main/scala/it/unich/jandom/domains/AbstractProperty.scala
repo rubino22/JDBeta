@@ -63,6 +63,8 @@ trait AbstractProperty[Property <: AbstractProperty[Property]] extends Partially
    */
   def union(that: Property): Property
 
+   
+  
   /**
    * Compute a lower bound of two abstract properties. If it is possible and convenient, this should compute
    * the greatest lower bound, but it is not a requirement.

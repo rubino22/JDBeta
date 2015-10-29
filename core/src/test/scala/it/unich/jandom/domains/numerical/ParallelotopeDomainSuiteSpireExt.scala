@@ -29,7 +29,7 @@ import it.unich.jandom.utils.numberext.ModRationalSpireExt
  */
 class ParallelotopeDomainSuiteSpireExt extends NumericalDomainSuite with SeparatedTopAndBottomSuite with EmptyExistsSuite {
   lazy val dom = ParallelotopeDomainModQSpire()
-
+/*
   val box = dom(DenseVector(-1, -1), DenseMatrix.eye(2), DenseVector(1, 1))
   val diamond = dom(DenseVector(-1, -1), DenseMatrix((1.0, 1.0), (1.0, -1.0)), DenseVector(1, 1))
   val empty = dom.bottom(2)
@@ -223,5 +223,5 @@ class ParallelotopeDomainSuiteSpireExt extends NumericalDomainSuite with Separat
       assertResult(p) { p.constraints.foldLeft(p.top) { (prop, lf) => prop.linearInequality(lf) } }
     }
   }
-
+*/
 }
