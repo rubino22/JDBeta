@@ -44,6 +44,8 @@ import it.unich.jandom.domains.numerical.ProductDomain
 import it.unich.jandom.domains.numerical.ProductDomainSuite
 import it.unich.jandom.domains.numerical.BoxSpireDomain
 import parma_polyhedra_library.Double_Box
+import scala.collection.mutable.ArrayBuffer
+
 
 
 /**
@@ -62,14 +64,16 @@ object JandomModQBench extends App {
   var totalTimeGMP =0.0
   var totalTimeSpire =0.0
   def CStoPolyehdra(dimension: Int, c: Seq[LinearForm[Double]]) = {
+    //println("Trasfomrazione");
     val d = PPLDomain[C_Polyhedron]    
+    //println("c "+c+" "+d.top(dimension));
     c.foldLeft(d.top(dimension)) { (p: d.Property, lf: LinearForm[Double]) => p.linearInequality(lf) }
   }
 
   def mkString[U <: DimensionFiberedProperty[U]](program: LTS, m: scala.collection.Map[LTS#ProgramPoint, U]): String = {
     (for ((loc, prop) <- m) yield loc.name + " => " + prop.mkString(program.env.variables)).mkString(", ")
   }
-
+ val Q = ArrayBuffer[String]()
   def fastModelAnalyze(model: File) = {
     totalPrograms += 1
 
@@ -192,14 +196,22 @@ object JandomModQBench extends App {
     val cann6 = ann6 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
    // val cann6Bis = ann6Bis mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
     val cann7 = ann7 mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }*/
-/*println("INIZIO")
+println("INIZIO")
     println(ProDom);
     println("---------------------------------------")
     println(Box);
     println("---------------------------------------")
     println(par);   
-    println("FINE")*/
-    val cprdoDom = ProDom mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
+    println("FINE")
+    ;
+
+    val cprdoDom = ProDom mapValues { p => CStoPolyehdra(p.p1.dimension, p.p1.constraints) intersection(CStoPolyehdra(p.p2.dimension, p.p2.constraints)) } 
+    val cprdoDom1 = ProDom mapValues { p => (CStoPolyehdra(p.p1.dimension, p.p1.constraints))}
+    val cprdoDom2 = ProDom mapValues { p => (CStoPolyehdra(p.p2.dimension, p.p2.constraints))}
+    //val cprdoDom2=  cprdoDom  map {case (loc, v) => (loc ->(cprdoDom(loc) intersection(cprdoDom1(loc))))}
+    println(cprdoDom)
+    println(cprdoDom1)
+    println(cprdoDom2)
     val cbox = Box mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
      val cpar = par mapValues { p => CStoPolyehdra(p.dimension, p.constraints) }
    //totalTimeGMP=totalTimeGMP + tann4;
@@ -232,13 +244,13 @@ object JandomModQBench extends App {
     
     //comparing sum with parallelotope
   //  val comp = cprdoDom map { case (loc, v) => (loc ->{println(cprdoDom);println(cbox(loc) intersection(cpar(loc))); v.tryCompareTo(cbox(loc) intersection(cpar(loc)))}) }
-    val comp = cprdoDom map { case (loc, v) => (loc ->v.tryCompareTo(cbox(loc) intersection(cpar(loc)))) }
+    val comp = cprdoDom  map { case (loc, v) => (loc ->v.tryCompareTo(cbox(loc) intersection(cpar(loc)))) }
 
     println("COUNT EQUALS: " + comp.count(_._2 == Some(0)))
     println("COUNT BETTER Prod: " + comp.count(_._2 == Some(-1)))
     println("COUNT BETTER Int: " + comp.count(_._2 == Some(1)))
     println("COUNT UNCOMPARABLES: " + comp.count(_._2 == None))
-
+//if(comp.count(_._2 == Some(1))>0) {Q += s"------>${model}"}
     totalEquals += comp.count(_._2 == Some(0))
     totalBestPPL += comp.count(_._2 == Some(-1))
     totalBestOther += comp.count(_._2 == Some(1))
@@ -267,14 +279,14 @@ if(singolo ==false){
     }
   }
 }
-else{
- val resources2 = getClass.getResource("/fast/aaron2.fst").toURI;
+else{//aaron2
+ val resources2 = getClass.getResource("/fast/metro.fst").toURI;
   val file= new File(resources2)  
    fastModelAnalyze(file) 
 }
  
   
- 
+ //println("FINALE "+Q);
 
   
 

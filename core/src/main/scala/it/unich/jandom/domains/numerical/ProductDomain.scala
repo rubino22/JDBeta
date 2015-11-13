@@ -71,9 +71,7 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
         val y1=(x1.intersection(d21(x2)))
        
         val y2=(x2.intersection(d12(x1)))
-        
-     //println("Intersezione "+x2+" "+d12(x1)+" ----> "+y2)
-
+   
         new Property(y1, y2)
       }
      
@@ -83,10 +81,7 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
       
       val q1 = p1 union that.p1
       val q2 = p2 union that.p2 
-     // print("U PRDOM ");
-    // val q3 = d21(p2) union d21(that.p2) 
-     // println("pre UNIONE "+d12(q3))
-     // println("UNIONE "+p2+"  "+that.p2+" ----> "+q2);
+     
       reduce(q1, q2)
     }
 
@@ -95,16 +90,24 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
     
     def widening(that: Property): Property ={
      
-     /* val widening1= this.p1 widening that.p1
+      val widening1= this.p1 widening that.p1
       val widening2= this.p2 widening that.p2
       val reduced=reduce(widening1, widening2)
-      //Still need to prove that reduction only in second domain terminates 
-      new Property(widening1, reduced.p2)*/
+        
+      //Still need to prove that reduction only in second domain terminates  
+      new Property(widening1, reduced.p2)
+   
       // We do not reduce since it may prevent termination
-      new Property(this.p1 widening that.p1, this.p2 widening that.p2)
+      //new Property(this.p1 widening that.p1, this.p2 widening that.p2)
+  
     }
 
     def narrowing(that: Property): Property ={       
+      val narrowing1= this.p1 narrowing that.p1
+      val narrowing2= this.p2 narrowing that.p2
+      val reduced=reduce(narrowing1, narrowing2)
+      //Still need to prove that reduction only in second domain terminates 
+      //new Property(narrowing1, reduced.p2)
       // We do not reduce since it may prevent termination
       new Property(this.p1 narrowing that.p1, this.p2 narrowing that.p2)
     }
