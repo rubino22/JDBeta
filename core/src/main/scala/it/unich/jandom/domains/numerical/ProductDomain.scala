@@ -60,7 +60,7 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
 
     def reduce(x1: dom1.Property, x2: dom2.Property): Property = {
         
-      if (x1.isEmpty && x2.isEmpty)
+     /* if (x1.isEmpty && x2.isEmpty)
         new Property(x1,x2)
       else if (x1.isEmpty)
         new Property(x1, x2.bottom)
@@ -73,7 +73,18 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
         val y2=(x2.intersection(d12(x1)))
    
         new Property(y1, y2)
-      }
+      }*/
+      
+      if(x1.isEmpty || x2.isEmpty)
+        return  new Property(x1.bottom,x2.bottom)
+        else{
+          val y1=(x1.intersection(d21(x2)))
+       
+        val y2=(x2.intersection(d12(x1)))
+   
+        new Property(y1, y2)
+          
+        }
      
     }
 
@@ -91,14 +102,12 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
     def widening(that: Property): Property ={
      
       val widening1= this.p1 widening that.p1
-      val widening2= this.p2 widening that.p2
-      val reduced=reduce(widening1, widening2)
-        
-      //Still need to prove that reduction only in second domain terminates  
-      new Property(widening1, reduced.p2)
-   
+      val widening2= this.p2 widening that.p2      
+      //Still need to prove that reduction only in second domain terminates
+      // val reduced=reduce(widening1, widening2)
+     // new Property(widening1, reduced.p2) 
       // We do not reduce since it may prevent termination
-      //new Property(this.p1 widening that.p1, this.p2 widening that.p2)
+      new Property(this.p1 widening that.p1, this.p2 widening that.p2)
   
     }
 
